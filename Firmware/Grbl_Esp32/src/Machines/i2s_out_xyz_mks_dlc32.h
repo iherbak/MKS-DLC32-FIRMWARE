@@ -186,7 +186,8 @@
 #define DEFAULT_SPINDLE_MAX_VALUE   1000    
 #define DEFAULT_SPINDLE_MIN_VALUE   0
 
-
-#define DEFAULT_BEEP_STATUS                 1
-#define DEFAULT_LANGUAGE_STATUS             1       // default simple engliash
+#ifdef USE_BOARD_V2_0
+    #define DEFAULT_BEEP_STATUS                 1
+    #define DEFAULT_LANGUAGE_STATUS             1       // default simple engliash
+#endif
 
