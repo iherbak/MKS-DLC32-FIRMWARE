@@ -1,7 +1,3 @@
-cmd.exe /c npm install
-cmd.exe /c npm audit fix
-cmd.exe /c npm audit
-cmd.exe /c gulp package
 cmd.exe /c bin2c -o embedded.h -m index.html.gz
 
 Powershell -Command "& Get-Content .\header.txt,.\embedded.h,.\footer.txt | Set-Content .\out.h"

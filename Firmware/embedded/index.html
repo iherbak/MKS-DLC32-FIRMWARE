@@ -6,21 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>ESP3D WebUI</title>
     <script>
-      var target_firmware = "grbl-embedded";
-    </script>
-    <script>
+      var target_firmware = "";
       var web_ui_version = "2.1.2b0";
-    </script>
-    <script>
       var direct_sd = false;
-    </script>
-    <script>
       var fw_version = "1";
-    </script>
-    <script>
       var primary_sd = "/ext/";
-    </script>
-    <script>
       var secondary_sd = "/sd/";
     </script>
     
@@ -10847,8 +10837,8 @@ function update_UI_firmware_target() {
   document.getElementById("control_z_position_label").innerHTML = "Z";
   document.getElementById("config_smoothie_nav").style.display = "none";
   showAxiscontrols();
-  if (target_firmware == "repetier") {
-    fwName = "Repetier";
+  if (target_firmware ==  firmwares.Repetier) {
+    fwName =  firmwares.Repetier;
     document.getElementById("configtablink").style.display = "block";
     document.getElementById("auto_check_control").style.display = "flex";
     document.getElementById("motor_off_control").style.display = "table-row";
@@ -10862,7 +10852,7 @@ function update_UI_firmware_target() {
     document.getElementById("control_xm_position_row").style.display = "none";
     document.getElementById("control_ym_position_row").style.display = "none";
     document.getElementById("control_zm_position_row").style.display = "none";
-  } else if (target_firmware == "repetier4davinci") {
+  } else if (target_firmware ==  firmwares.Repetier4DaVinci) {
     fwName = "Repetier for Davinci";
     document.getElementById("configtablink").style.display = "block";
     document.getElementById("auto_check_control").style.display = "flex";
@@ -10877,8 +10867,8 @@ function update_UI_firmware_target() {
     document.getElementById("control_xm_position_row").style.display = "none";
     document.getElementById("control_ym_position_row").style.display = "none";
     document.getElementById("control_zm_position_row").style.display = "none";
-  } else if (target_firmware == "smoothieware") {
-    fwName = "Smoothieware";
+  } else if (target_firmware ==  firmwares.Smoothieware) {
+    fwName =  firmwares.Smoothieware;
     document.getElementById("configtablink").style.display = "block";
     document.getElementById("config_smoothie_nav").style.display = "block";
     document.getElementById("auto_check_control").style.display = "flex";
@@ -10893,7 +10883,7 @@ function update_UI_firmware_target() {
     document.getElementById("control_xm_position_row").style.display = "none";
     document.getElementById("control_ym_position_row").style.display = "none";
     document.getElementById("control_zm_position_row").style.display = "none";
-  } else if (target_firmware == "grbl-embedded") {
+  } else if (target_firmware ==  firmwares.GrblEmbedded) {
     fwName = "GRBL ESP32";
     last_grbl_pos = "";
     document.getElementById("configtablink").style.display = "block";
@@ -10959,7 +10949,7 @@ function update_UI_firmware_target() {
     document.getElementById("settings_filters").style.display = "none";
     document.getElementById("control_x_position_label").innerHTML = "Xw";
     document.getElementById("control_y_position_label").innerHTML = "Yw";
-  } else if (target_firmware == "marlin-embedded") {
+  } else if (target_firmware ==  firmwares.MarlinEmbedded) {
     fwName = "Marlin ESP32";
     document.getElementById("configtablink").style.display = "block";
     document.getElementById("auto_check_control").style.display = "flex";
@@ -10977,8 +10967,8 @@ function update_UI_firmware_target() {
     document.getElementById("control_xm_position_row").style.display = "none";
     document.getElementById("control_ym_position_row").style.display = "none";
     document.getElementById("control_zm_position_row").style.display = "none";
-  } else if (target_firmware == "marlin") {
-    fwName = "Marlin";
+  } else if (target_firmware ==  firmwares.Marlin) {
+    fwName =  firmwares.Marlin;
     document.getElementById("configtablink").style.display = "block";
     document.getElementById("auto_check_control").style.display = "flex";
     document.getElementById("motor_off_control").style.display = "table-row";
@@ -10992,7 +10982,7 @@ function update_UI_firmware_target() {
     document.getElementById("control_xm_position_row").style.display = "none";
     document.getElementById("control_ym_position_row").style.display = "none";
     document.getElementById("control_zm_position_row").style.display = "none";
-  } else if (target_firmware == "marlinkimbra") {
+  } else if (target_firmware ==  firmwares.MarlinKimbra) {
     fwName = "Marlin Kimbra";
     document.getElementById("configtablink").style.display = "block";
     document.getElementById("auto_check_control").style.display = "flex";
@@ -11007,8 +10997,8 @@ function update_UI_firmware_target() {
     document.getElementById("control_xm_position_row").style.display = "none";
     document.getElementById("control_ym_position_row").style.display = "none";
     document.getElementById("control_zm_position_row").style.display = "none";
-  } else if (target_firmware == "grbl") {
-    fwName = "Grbl";
+  } else if (target_firmware ==  firmwares.Grbl) {
+    fwName =  firmwares.Grbl;
     document.getElementById("configtablink").style.display = "block";
     document.getElementById("tab_title_configuration").innerHTML =
       "<span translate>GRBL configuration</span>";
@@ -11038,7 +11028,7 @@ function update_UI_firmware_target() {
     fwName = "Unknown";
     document.getElementById("configtablink").style.display = "none";
   }
-  if (target_firmware == "grbl-embedded") {
+  if (target_firmware ==  firmwares.GrblEmbedded) {
     EP_HOSTNAME = "System/Hostname";
     EP_STA_SSID = "Sta/SSID";
     EP_STA_PASSWORD = "Sta/Password";
@@ -11052,7 +11042,7 @@ function update_UI_firmware_target() {
     EP_AP_IP_VALUE = "AP/IP";
     SETTINGS_AP_MODE = 2;
     SETTINGS_STA_MODE = 1;
-  } else if (target_firmware == "marlin-embedded") {
+  } else if (target_firmware ==  firmwares.MarlinEmbedded) {
     EP_HOSTNAME = "ESP_HOSTNAME";
     EP_STA_SSID = "STA_SSID";
     EP_STA_PASSWORD = "STA_PWD";
@@ -11119,7 +11109,7 @@ function initUI() {
     document.getElementById("FW_VERSION").innerHTML = fw_version;
   // Get the element with id="defaultOpen" and click on it
   document.getElementById("maintablink").click();
-  if (target_firmware == "grbl-embedded" || target_firmware == "grbl") {
+  if (target_firmware ==  firmwares.GrblEmbedded || target_firmware ==  firmwares.Grbl) {
     if (typeof document.getElementById("grblcontroltablink") !== "undefined") {
       document.getElementById("grblcontroltablink").click();
     }
@@ -11216,7 +11206,7 @@ var socket_response = "";
 var socket_is_settings = false;
 
 function process_socket_response(msg) {
-  if (target_firmware == "grbl-embedded" || target_firmware == "grbl") {
+  if (target_firmware ==  firmwares.GrblEmbedded || target_firmware == firmwares.Grbl) {
     if (msg.startsWith("<")) {
       grbl_process_status(msg);
     } else if (msg.startsWith("[PRB:")) {
@@ -11247,7 +11237,7 @@ function process_socket_response(msg) {
       }
     }
   } else {
-    if (target_firmware == "marlin-embedded") {
+    if (target_firmware ==  firmwares.MarlinEmbedded) {
       if (
         socket_is_settings &&
         !(
@@ -11399,7 +11389,7 @@ function Monitor_output_Update(message) {
     }
     var regex = /ok T:/g;
 
-    if (target_firmware == "repetier" || target_firmware == "repetier4davinci") {
+    if (target_firmware ==  firmwares.Repetier || target_firmware ==  firmwares.Repetier4DaVinci) {
         regex = /T:/g;
     }
     var output = "";
@@ -11409,7 +11399,7 @@ function Monitor_output_Update(message) {
         //Filter the output  
         if ((Monitor_output[i].trim().toLowerCase().startsWith("ok")) && !isverbosefilter) continue;
         if ((Monitor_output[i].trim().toLowerCase() == "wait") && !isverbosefilter) continue;
-        if ((target_firmware == "grbl") || (target_firmware == "grbl-embedded")) {
+        if ((target_firmware ==  firmwares.Grbl) || (target_firmware ==  firmwares.GrblEmbedded)) {
             //no status
             if ((Monitor_output[i].startsWith("<") || Monitor_output[i].startsWith("[echo:")) && !isverbosefilter) continue;
         } else {
@@ -11523,18 +11513,18 @@ function refreshconfig(is_override) {
     config_override_List = [];
     //removeIf(production)
     var response_text = "";
-    if (target_firmware == "smoothieware") response_text = "# Robot module configurations : general handling of movement G-codes and slicing into moves\ndefault_feed_rate                            4000             # Default rate ( mm/minute ) for G1/G2/G3 moves\ndefault_seek_rate                            4000             # Default rate ( mm/minute ) for G0 moves\nmm_per_arc_segment                           0.0              # Fixed length for line segments that divide arcs 0 to disable\nmm_max_arc_error                             0.01             # The maximum error for line segments that divide arcs 0 to disable\n                                                              # note it is invalid for both the above be 0\n                                                              # if both are used, will use largest segment length based on radius\n#mm_per_line_segment                          5                # Lines can be cut into segments ( not usefull with cartesian coordinates robots ).\n\n# Arm solution configuration : Cartesian robot. Translates mm positions into stepper positions\nalpha_steps_per_mm                           80               # Steps per mm for alpha stepper\nbeta_steps_per_mm                            80               # Steps per mm for beta stepper\ngamma_steps_per_mm                           1637.7953        # Steps per mm for gamma stepper\n\n# Planner module configuration : Look-ahead and acceleration configuration\nplanner_queue_size                           32               # DO NOT CHANGE THIS UNLESS YOU KNOW EXACTLY WHAT YOUR ARE DOING\nacceleration                                 3000             # Acceleration in mm/second/second.\n#z_acceleration                              500              # Acceleration for Z only moves in mm/s^2, 0 disables it, disabled by default. DO NOT SET ON A DELTA\njunction_deviation                           0.05             # Similar to the old max_jerk, in millimeters, see : https://github.com/grbl/grbl/blob/master/planner.c#L409\n                                                              # and https://github.com/grbl/grbl/wiki/Configuring-Grbl-v0.8 . Lower values mean being more careful, higher values means being faster and have more jerk\n\n# Stepper module configuration\nmicroseconds_per_step_pulse                  1                # Duration of step pulses to stepper drivers, in microseconds\nbase_stepping_frequency                      100000           # Base frequency for stepping\n\n# Stepper module pins ( ports, and pin numbers, appending ! to the number will invert a pin )\nalpha_step_pin                               2.1              # Pin for alpha stepper step signal\nalpha_dir_pin                                0.11             # Pin for alpha stepper direction\nalpha_en_pin                                 0.10!            # Pin for alpha enable pin\nalpha_current                                1.0              # X stepper motor current\nx_axis_max_speed                             30000            # mm/min\nalpha_max_rate                               30000.0          # mm/min actuator max speed;";
-    if (target_firmware == "grbl" || target_firmware=="grbl-embedded") response_text = "$0=10\n$1=25\n$2=0\n$3=0\n$4=0\n$5=0\n$6=0\n$10=1\n$11=0.010\n$12=0.002\n$13=0\n$20=0\n$21=0\n$22=0\n$23=0\n$24=25.000\n$25=500.000\n$26=250\n$27=1.000\n$30=1000\n$31=0\n$32=0\n$100=250.000\n$101=250.000\n$102=250.000\n$110=500.000\n$111=500.000\n$112=500.000\n$120=10.000\n$121=20.000\n$122=10.000\n$130=200.000\n$131=200.000\n$132=200.000";
+    if (target_firmware ==  firmwares.Smoothieware) response_text = "# Robot module configurations : general handling of movement G-codes and slicing into moves\ndefault_feed_rate                            4000             # Default rate ( mm/minute ) for G1/G2/G3 moves\ndefault_seek_rate                            4000             # Default rate ( mm/minute ) for G0 moves\nmm_per_arc_segment                           0.0              # Fixed length for line segments that divide arcs 0 to disable\nmm_max_arc_error                             0.01             # The maximum error for line segments that divide arcs 0 to disable\n                                                              # note it is invalid for both the above be 0\n                                                              # if both are used, will use largest segment length based on radius\n#mm_per_line_segment                          5                # Lines can be cut into segments ( not usefull with cartesian coordinates robots ).\n\n# Arm solution configuration : Cartesian robot. Translates mm positions into stepper positions\nalpha_steps_per_mm                           80               # Steps per mm for alpha stepper\nbeta_steps_per_mm                            80               # Steps per mm for beta stepper\ngamma_steps_per_mm                           1637.7953        # Steps per mm for gamma stepper\n\n# Planner module configuration : Look-ahead and acceleration configuration\nplanner_queue_size                           32               # DO NOT CHANGE THIS UNLESS YOU KNOW EXACTLY WHAT YOUR ARE DOING\nacceleration                                 3000             # Acceleration in mm/second/second.\n#z_acceleration                              500              # Acceleration for Z only moves in mm/s^2, 0 disables it, disabled by default. DO NOT SET ON A DELTA\njunction_deviation                           0.05             # Similar to the old max_jerk, in millimeters, see : https://github.com/grbl/grbl/blob/master/planner.c#L409\n                                                              # and https://github.com/grbl/grbl/wiki/Configuring-Grbl-v0.8 . Lower values mean being more careful, higher values means being faster and have more jerk\n\n# Stepper module configuration\nmicroseconds_per_step_pulse                  1                # Duration of step pulses to stepper drivers, in microseconds\nbase_stepping_frequency                      100000           # Base frequency for stepping\n\n# Stepper module pins ( ports, and pin numbers, appending ! to the number will invert a pin )\nalpha_step_pin                               2.1              # Pin for alpha stepper step signal\nalpha_dir_pin                                0.11             # Pin for alpha stepper direction\nalpha_en_pin                                 0.10!            # Pin for alpha enable pin\nalpha_current                                1.0              # X stepper motor current\nx_axis_max_speed                             30000            # mm/min\nalpha_max_rate                               30000.0          # mm/min actuator max speed;";
+    if (target_firmware ==  firmwares.Grbl || target_firmware== firmwares.GrblEmbedded) response_text = "$0=10\n$1=25\n$2=0\n$3=0\n$4=0\n$5=0\n$6=0\n$10=1\n$11=0.010\n$12=0.002\n$13=0\n$20=0\n$21=0\n$22=0\n$23=0\n$24=25.000\n$25=500.000\n$26=250\n$27=1.000\n$30=1000\n$31=0\n$32=0\n$100=250.000\n$101=250.000\n$102=250.000\n$110=500.000\n$111=500.000\n$112=500.000\n$120=10.000\n$121=20.000\n$122=10.000\n$130=200.000\n$131=200.000\n$132=200.000";
     else response_text = "EPR:0 1028 7 Language\nEPR:2 75 230400 Baudrate\nEPR:0 1125 1 Display Mode:\nEPR:0 1119 1 Light On:\nEPR:0 1127 1 Keep Light On:\nEPR:0 1126 0 Filament Sensor On:\nEPR:0 1176 0 Top Sensor On:\nEPR:0 1120 1 Sound On:\nEPR:0 1177 1 Wifi On:\nEPR:3 129 0.000 Filament printed [m]\nEPR:2 125 0 Printer active [s]\nEPR:2 79 0 Max. inactive time [ms,0=off]\nEPR:2 83 360000 Stop stepper after inactivity [ms,0=off]\nEPR:2 1121 0 Powersave after [ms,0=off]:\nEPR:3 1160 180.000 Temp Ext PLA:\nEPR:3 1164 230.000 Temp Ext ABS:\nEPR:3 1168 60.000 Temp Bed PLA:\nEPR:3 1172 90.000 Temp Bed ABS:\nEPR:3 1179 2.000 Load Feed Rate:\nEPR:3 1183 4.000 Unload Feed Rate:\nEPR:3 1187 60.000 Unload/Load Distance:\nEPR:3 3 80.0000 X-axis steps per mm\nEPR:3 7 80.0000 Y-axis steps per mm\nEPR:3 11 2560.0000 Z-axis steps per mm\nEPR:3 15 200.000 X-axis max. feedrate [mm/s]\nEPR:3 19 200.000 Y-axis max. feedrate [mm/s]\nEPR:3 23 5.000 Z-axis max. feedrate [mm/s]\nEPR:3 27 40.000 X-axis homing feedrate [mm/s]\nEPR:3 31 40.000 Y-axis homing feedrate [mm/s]\nEPR:3 35 4.000 Z-axis homing feedrate [mm/s]\nEPR:3 39 20.000 Max. jerk [mm/s]\nEPR:3 47 0.342 Max. Z-jerk [mm/s]\nEPR:3 133 0.000 X min pos [mm]\nEPR:3 137 0.000 Y min pos [mm]\nEPR:3 141 0.000 Z min pos [mm]\nEPR:3 145 199.000 X max length [mm]\nEPR:3 149 204.000 Y max length [mm]\nEPR:3 153 200.000 Z max length [mm]\nEPR:3 51 1000.000 X-axis acceleration [mm/s^2]\nEPR:3 55 1000.000 Y-axis acceleration [mm/s^2]\nEPR:3 59 100.000 Z-axis acceleration [mm/s^2]\nEPR:3 63 1000.000 X-axis travel acceleration [mm/s^2]\nEPR:3 67 1000.000 Y-axis travel acceleration [mm/s^2]\nEPR:3 71 150.000 Z-axis travel acceleration [mm/s^2]\nEPR:3 1024 0.000 Coating thickness [mm]\nEPR:3 1128 100.000 Manual-probe X1 [mm]\nEPR:3 1132 180.000 Manual-probe Y1 [mm]\nEPR:3 1136 100.000 Manual-probe X2 [mm]\nEPR:3 1140 10.000 Manual-probe Y2 [mm]\nEPR:3 1144 50.000 Manual-probe X3 [mm]\nEPR:3 1148 95.000 Manual-probe Y3 [mm]\nEPR:3 1152 150.000 Manual-probe X4 [mm]\nEPR:3 1156 95.000 Manual-probe Y4 [mm]\nEPR:3 808 0.280 Z-probe height [mm]\nEPR:3 929 5.000 Max. z-probe - bed dist. [mm]\nEPR:3 812 1.000 Z-probe speed [mm/s]\nEPR:3 840 30.000 Z-probe x-y-speed [mm/s]\nEPR:3 800 0.000 Z-probe offset x [mm]\nEPR:3 804 0.000 Z-probe offset y [mm]\nEPR:3 816 36.000 Z-probe X1 [mm]\nEPR:3 820 -7.000 Z-probe Y1 [mm]\nEPR:3 824 36.000 Z-probe X2 [mm]\nEPR:3 828 203.000 Z-probe Y2 [mm]\nEPR:3 832 171.000 Z-probe X3 [mm]\nEPR:3 836 203.000 Z-probe Y3 [mm]\nEPR:3 1036 0.000 Z-probe bending correction A [mm]\nEPR:3 1040 0.000 Z-probe bending correction B [mm]\nEPR:3 1044 0.000 Z-probe bending correction C [mm]\nEPR:0 880 0 Autolevel active (1/0)\nEPR:0 106 2 Bed Heat Manager [0-3]\nEPR:0 107 255 Bed PID drive max\nEPR:0 124 80 Bed PID drive min\nEPR:3 108 196.000 Bed PID P-gain\nEPR:3 112 33.000 Bed PID I-gain\nEPR:3 116 290.000 Bed PID D-gain\nEPR:0 120 255 Bed PID max value [0-255]\nEPR:0 1020 0 Enable retraction conversion [0/1]\nEPR:3 992 3.000 Retraction length [mm]\nEPR:3 996 13.000 Retraction length extruder switch [mm]\nEPR:3 1000 40.000 Retraction speed [mm/s]\nEPR:3 1004 0.000 Retraction z-lift [mm]\nEPR:3 1008 0.000 Extra extrusion on undo retract [mm]\nEPR:3 1012 0.000 Extra extrusion on undo switch retract [mm]\nEPR:3 1016 20.000 Retraction undo speed\nEPR:3 200 99.000 Extr.1 steps per mm\nEPR:3 204 50.000 Extr.1 max. feedrate [mm/s]\nEPR:3 208 20.000 Extr.1 start feedrate [mm/s]\nEPR:3 212 5000.000 Extr.1 acceleration [mm/s^2]\nEPR:0 216 3 Extr.1 heat manager [0-3]\nEPR:0 217 230 Extr.1 PID drive max\nEPR:0 245 40 Extr.1 PID drive min\nEPR:3 218 3.0000 Extr.1 PID P-gain/dead-time\nEPR:3 222 2.0000 Extr.1 PID I-gain\nEPR:3 226 40.0000 Extr.1 PID D-gain\nEPR:0 230 255 Extr.1 PID max value [0-255]\nEPR:2 231 0 Extr.1 X-offset [steps]\nEPR:2 235 0 Extr.1 Y-offset [steps]\nEPR:2 290 0 Extr.1 Z-offset [steps]\nEPR:1 239 1 Extr.1 temp. stabilize time [s]\nEPR:1 250 150 Extr.1 temp. for retraction when heating [C]\nEPR:1 252 0 Extr.1 distance to retract when heating [mm]\nEPR:0 254 255 Extr.1 extruder cooler speed [0-255]\nEPR:3 246 0.000 Extr.1 advance L [0=off]\nEPR:3 300 99.000 Extr.2 steps per mm\nEPR:3 304 50.000 Extr.2 max. feedrate [mm/s]\nEPR:3 308 20.000 Extr.2 start feedrate [mm/s]\nEPR:3 312 5000.000 Extr.2 acceleration [mm/s^2]\nEPR:0 316 3 Extr.2 heat manager [0-3]\nEPR:0 317 230 Extr.2 PID drive max\nEPR:0 345 40 Extr.2 PID drive min\nEPR:3 318 3.0000 Extr.2 PID P-gain/dead-time\nEPR:3 322 2.0000 Extr.2 PID I-gain\nEPR:3 326 40.0000 Extr.2 PID D-gain\nEPR:0 330 255 Extr.2 PID max value [0-255]\nEPR:2 331 -2852 Extr.2 X-offset [steps]\nEPR:2 335 12 Extr.2 Y-offset [steps]\nEPR:2 390 0 Extr.2 Z-offset [steps]\nEPR:1 339 1 Extr.2 temp. stabilize time [s]\nEPR:1 350 150 Extr.2 temp. for retraction when heating [C]\nEPR:1 352 0 Extr.2 distance to retract when heating [mm]\nEPR:0 354 255 Extr.2 extruder cooler speed [0-255]\nEPR:3 346 0.000 Extr.2 advance L [0=off]\n";
     getESPconfigSuccess(response_text);
     return;
     //endRemoveIf(production)
-    if (target_firmware == "smoothieware") {
+    if (target_firmware ==  firmwares.Smoothieware) {
         if (!is_override_config) config_file_name = "/sd/config";
         commandtxt = "cat " + config_file_name;
     }
-    if ((target_firmware == "grbl") || (target_firmware == "grbl-embedded")) commandtxt = "$$";
-    if ((target_firmware == "marlin") || (target_firmware == "marlinkimbra") || (target_firmware == "marlin-embedded")) commandtxt = "M503";
+    if ((target_firmware ==  firmwares.Grbl) || (target_firmware ==  firmwares.GrblEmbedded)) commandtxt = "$$";
+    if ((target_firmware ==  firmwares.Marlin) || (target_firmware ==  firmwares.MarlinKimbra) || (target_firmware ==  firmwares.MarlinEmbedded)) commandtxt = "M503";
     getprinterconfig(is_override_config);
 }
 
@@ -11558,7 +11548,7 @@ function getprinterconfig(is_override) {
         is_override_config = true;
     } else is_override_config = false;
     var url = "/command?plain=" + encodeURIComponent(cmd);
-    if ((target_firmware == "grbl-embedded") || (target_firmware == "marlin-embedded")) SendGetHttp(url);
+    if ((target_firmware ==  firmwares.GrblEmbedded) || (target_firmware ==  firmwares.MarlinEmbedded)) SendGetHttp(url);
     else SendGetHttp(url, getESPconfigSuccess, getESPconfigfailed);
 }
 
@@ -11612,7 +11602,7 @@ function build_HTML_config_list() {
             content += "<div class='input-group'>";
             content += "<span class='input-group-addon hide_it' ></span>";
             content += "<input id='config_" + prefix + i + "' type='text' class='form-control' style='width:";
-            if ((target_firmware == "marlin") || (target_firmware == "marlinkimbra") || (target_firmware == "marlin-embedded") || is_override_config) content += "25em";
+            if ((target_firmware ==  firmwares.Marlin) || (target_firmware ==  firmwares.MarlinKimbra) || (target_firmware ==  firmwares.MarlinEmbedded) || is_override_config) content += "25em";
             else content += "auto";
             content += "'  value='" + item.defaultvalue + "' onkeyup='config_checkchange(" + i + "," + is_override_config + ")' />";
             content += "<span id='icon_config_" + prefix + i + "'class='form-control-feedback ico_feedback' ></span>";
@@ -11630,14 +11620,14 @@ function build_HTML_config_list() {
             content += "</td></tr></table>";
             content += "</td>";
             content += "<td style='vertical-align:middle'>";
-            if ((target_firmware == "grbl") || (target_firmware == "grbl-embedded"))content += item.help;
+            if ((target_firmware ==  firmwares.Grbl) || (target_firmware ==  firmwares.GrblEmbedded))content += item.help;
             else content += HTMLEncode(item.help);
         }
         content += "</td>";
         content += "</tr>\n";
     }
     if (content.length > 0) {
-        if (target_firmware == "smoothieware") {
+        if (target_firmware ==  firmwares.Smoothieware) {
             document.getElementById('config_main_file_name').innerHTML = config_file_name;
             if (!is_override_config) {
                 document.getElementById('config_list_data').innerHTML = content;
@@ -11646,7 +11636,7 @@ function build_HTML_config_list() {
                 document.getElementById('config_override_data').innerHTML = content;
                 if (is_config_override_file()) {
                     document.getElementById('config_delete_override').style.display = 'none';
-                    document.getElementById('config_override_file_name').innerHTML = "Smoothieware";
+                    document.getElementById('config_override_file_name').innerHTML =  firmwares.Smoothieware;
                 } else {
                     document.getElementById('config_override_file_name').innerHTML = "/sd/config-override";
                     document.getElementById('config_delete_override').style.display = 'block';
@@ -11664,13 +11654,13 @@ function build_HTML_config_list() {
 
 function config_check_value(value, index, is_override) {
     var isvalid = true;
-    if ((target_firmware == "smoothieware") && !is_override) {
+    if ((target_firmware ==  firmwares.Smoothieware) && !is_override) {
         if ((value.trim()[0] == '-') || (value.length === 0) || (value.toLowerCase().indexOf("#") != -1)) {
             isvalid = false;
             config_error_msg = translate_text_item("cannot have '-', '#' char or be empty");
         }
     }
-    if ((target_firmware == "grbl") || (target_firmware == "grbl-embedded")) {
+    if ((target_firmware ==  firmwares.Grbl) || (target_firmware ==  firmwares.GrblEmbedded)) {
         if ((value.trim()[0] == '-') || (value.length === 0) || (value.toLowerCase().indexOf("#") != -1)) {
             isvalid = false;
             config_error_msg = translate_text_item("cannot have '-', '#' char or be empty");
@@ -11689,7 +11679,7 @@ function process_config_answer(response_text) {
     var tlines = response_text.split("\n");
     //console.log(tlines.length);
     if (tlines.length <= 3) {
-        if ((target_firmware == "smoothieware") && (commandtxt != "cat /sd/config.txt")) {
+        if ((target_firmware ==  firmwares.Smoothieware) && (commandtxt != "cat /sd/config.txt")) {
             if (!is_override_config) {
                 config_file_name = "/sd/config.txt";
                 commandtxt = "cat " + config_file_name;
@@ -11698,7 +11688,7 @@ function process_config_answer(response_text) {
             getprinterconfig();
         } else {
             //console.log("No config file" );
-            if ((target_firmware == "smoothieware")) document.getElementById('config_status').innerHTML = translate_text_item("File config / config.txt not found!");
+            if ((target_firmware ==  firmwares.Smoothieware)) document.getElementById('config_status').innerHTML = translate_text_item("File config / config.txt not found!");
             else document.getElementById('config_status').innerHTML = translate_text_item("Cannot get EEPROM content!");
             result = false;
         }
@@ -11719,11 +11709,11 @@ function create_config_entry(sentry, vindex) {
     var iscomment;
     var ssentry = sentry;
     if (!is_config_entry(ssentry)) return vindex;
-    if ((target_firmware == "marlin") || (target_firmware == "marlinkimbra")) {
+    if ((target_firmware ==  firmwares.Marlin) || (target_firmware ==  firmwares.MarlinKimbra)) {
         if (sentry.startsWith("Config:  ")) ssentry = sentry.replace("Config:", "");
         else ssentry = sentry.replace("Config:", "#");
     }
-    if ((target_firmware == "marlin") || (target_firmware == "marlinkimbra") || (target_firmware == "marlin-embedded")) {
+    if ((target_firmware ==  firmwares.Marlin) || (target_firmware ==  firmwares.MarlinKimbra) || (target_firmware ==  firmwares.MarlinEmbedded)) {
         if (sentry.startsWith("echo: ")) ssentry = sentry.replace("echo:", "");
         else ssentry = sentry.replace("echo:", "#");
     }
@@ -11779,14 +11769,14 @@ function create_config_entry(sentry, vindex) {
 function is_config_entry(sline) {
     var line = sline.trim();
     if (line.length == 0) return false;
-    if ((target_firmware == "marlin") || (target_firmware == "marlinkimbra") || (target_firmware == "marlin-embedded")) {
+    if ((target_firmware ==  firmwares.Marlin) || (target_firmware ==  firmwares.MarlinKimbra) || (target_firmware ==  firmwares.MarlinEmbedded)) {
         if (sline.startsWith("Config:") || sline.startsWith("echo:") || sline.startsWith("\t") || sline.startsWith("  ")) return true
         else return false;
     }
-    if (target_firmware == "smoothieware") {
+    if (target_firmware ==  firmwares.Smoothieware) {
         return true;
     }
-    if ((target_firmware == "grbl") || (target_firmware == "grbl-embedded")) {
+    if ((target_firmware ==  firmwares.Grbl) || (target_firmware ==  firmwares.GrblEmbedded)) {
         if ((line.indexOf("$") == 0) && (line.indexOf("=") != -1)) return true;
         else return false
     }
@@ -11799,10 +11789,10 @@ function is_config_entry(sline) {
 function get_config_label(sline) {
     var tline = sline.trim().split(" ");
     var tsize = tline.length;
-    if ((target_firmware == "smoothieware") || (target_firmware == "marlin") || (target_firmware == "marlinkimbra") || (target_firmware == "marlin-embedded")) {
+    if ((target_firmware ==  firmwares.Smoothieware) || (target_firmware ==  firmwares.Marlin) || (target_firmware ==  firmwares.MarlinKimbra) || (target_firmware ==  firmwares.MarlinEmbedded)) {
         return tline[0];
     }
-    if ((target_firmware == "grbl") || (target_firmware == "grbl-embedded")) {
+    if ((target_firmware ==  firmwares.Grbl) || (target_firmware ==  firmwares.GrblEmbedded)) {
         var tline2 = sline.trim().split("=");
         return tline2[0];
     }
@@ -11820,11 +11810,11 @@ function get_config_label(sline) {
 
 function get_config_value(sline) {
     var tline = sline.trim().split(" ");
-    if ((target_firmware == "smoothieware") && !is_override_config) {
+    if ((target_firmware ==  firmwares.Smoothieware) && !is_override_config) {
         if ((tline.length > 1) && tline[0][0] != '#') return tline[1];
         else return "???";
     }
-    if ((target_firmware == "marlin") || (target_firmware == "marlinkimbra") || (target_firmware == "marlin-embedded") || is_override_config) {
+    if ((target_firmware ==  firmwares.Marlin) || (target_firmware ==  firmwares.MarlinKimbra) || (target_firmware ==  firmwares.MarlinEmbedded) || is_override_config) {
 
         var tline1;
         if (sline.indexOf(";") != -1) tline1 = sline.trim().split(";");
@@ -11837,7 +11827,7 @@ function get_config_value(sline) {
         }
         return line;
     }
-    if ((target_firmware == "grbl") || (target_firmware == "grbl-embedded")) {
+    if ((target_firmware ==  firmwares.Grbl) || (target_firmware ==  firmwares.GrblEmbedded)) {
         var tline2 = sline.trim().split("=");
         if (tline2.length > 1) return tline2[1];
         else return "???";
@@ -11849,12 +11839,12 @@ function get_config_value(sline) {
 
 function get_config_help(sline) {
     if (is_override_config) return "";
-    if (target_firmware == "smoothieware") {
+    if (target_firmware ==  firmwares.Smoothieware) {
         var pos = sline.indexOf("#");
         if (pos > -1) return sline.slice(pos + 1, sline.length);
         else return "";
     }
-    if ((target_firmware == "marlin") || (target_firmware == "marlinkimbra") || (target_firmware == "marlin-embedded")) {
+    if ((target_firmware ==  firmwares.Marlin) || (target_firmware ==  firmwares.MarlinKimbra) || (target_firmware ==  firmwares.MarlinEmbedded)) {
         var tline;
         if (sline.indexOf(";") != -1) {
             tline = sline.trim().split(";");
@@ -11868,7 +11858,7 @@ function get_config_help(sline) {
             } else return "";
         }
     }
-    if ((target_firmware == "grbl") || (target_firmware == "grbl-embedded")) {
+    if ((target_firmware ==  firmwares.Grbl) || (target_firmware ==  firmwares.GrblEmbedded)) {
         return inline_help(get_config_label(sline))
     }
     var tline = sline.split("[");
@@ -11881,15 +11871,15 @@ function get_config_help(sline) {
 
 function get_config_command(sline) {
     var command;
-    if ((target_firmware == "smoothieware") && !is_override_config) {
+    if ((target_firmware ==  firmwares.Smoothieware) && !is_override_config) {
         command = "config-set sd " + get_config_label(sline) + " ";
         return command;
     }
-    if ((target_firmware == "marlin") || (target_firmware == "marlinkimbra") || (target_firmware == "marlin-embedded") || is_override_config) {
+    if ((target_firmware ==  firmwares.Marlin) || (target_firmware ==  firmwares.MarlinKimbra) || (target_firmware ==  firmwares.MarlinEmbedded) || is_override_config) {
         command = get_config_label(sline) + " ";
         return command;
     }
-    if ((target_firmware == "grbl") || (target_firmware == "grbl-embedded")) {
+    if ((target_firmware ==  firmwares.Grbl) || (target_firmware ==  firmwares.GrblEmbedded)) {
         command = get_config_label(sline) + "=";
         return command;
     }
@@ -11909,7 +11899,7 @@ function is_config_commented(sline) {
     var line = sline.trim();
     if (line.length == 0) return false;
     if (is_override_config) return line.startsWith(";");
-    if ((target_firmware == "marlin") || (target_firmware == "marlinkimbra") || (target_firmware == "marlin-embedded") || (target_firmware == "smoothieware")) {
+    if ((target_firmware ==  firmwares.Marlin) || (target_firmware ==  firmwares.MarlinKimbra) || (target_firmware ==  firmwares.MarlinEmbedded) || (target_firmware ==  firmwares.Smoothieware)) {
         return line.startsWith("#");
     }
     return false;
@@ -12149,7 +12139,7 @@ function getFWdata(response) {
     if (sublist.length != 2) {
         return false;
     }
-    if (!direct_sd && (target_firmware == "smoothieware")) {
+    if (!direct_sd && (target_firmware ==  firmwares.Smoothieware)) {
         primary_sd = "sd/";
     } else {
         primary_sd = sublist[1].toLowerCase().trim();
@@ -12159,7 +12149,7 @@ function getFWdata(response) {
     if (sublist.length != 2) {
         return false;
     }
-    if (!direct_sd && (target_firmware == "smoothieware")) {
+    if (!direct_sd && (target_firmware ==  firmwares.Smoothieware)) {
         secondary_sd = "ext/";
     } else {
         secondary_sd = sublist[1].toLowerCase().trim();
@@ -12191,7 +12181,7 @@ function getFWdata(response) {
         if (sublist[0].trim() == "hostname") esp_hostname = sublist[1].trim();
     }
 
-    if ((target_firmware == "grbl-embedded") && (tlist.length > 8)) {
+    if ((target_firmware ==  firmwares.GrblEmbedded) && (tlist.length > 8)) {
         sublist = tlist[8].split(":");
         if (sublist[0].trim() == "axis") {
             grblaxis = parseInt(sublist[1].trim());
@@ -12243,6 +12233,17 @@ function retryconnect() {
     SendGetHttp(url, connectsuccess, connectfailed)
 }
 
+const firmwares = Object.freeze({
+    Unknown: Symbol("unknown"),
+    Repetier4DaVinci: Symbol("repetier4davinci"),
+    Marlin: Symbol("marlin"),
+    MarlinKimbra: Symbol("marlinkimbra"),
+    Smoothieware: Symbol("smoothieware"),
+    Repetier: Symbol("repetier"),
+    Grbl: Symbol("grbl"),
+    GrblEmbedded: Symbol("grbl-embedded"),
+    MarlinEmbedded: Symbol("marlin-embedded")
+})
 var interval_position = -1;
 var control_macrolist = [];
 
@@ -12265,7 +12266,7 @@ function showAxiscontrols() {
     document.getElementById('JogBar').style.display = 'block';
     document.getElementById('HomeZ').style.display = 'block';
     document.getElementById('control_z_position_display').style.display = 'block';
-    if ((target_firmware == "grbl-embedded") || (target_firmware == "grbl")) {
+    if ((target_firmware ==  firmwares.GrblEmbedded) || (target_firmware ==  firmwares.Grbl)) {
         document.getElementById('control_zm_position_row').style.display = 'table-row';
     }
     document.getElementById('z_velocity_display').style.display = 'inline';
@@ -12363,10 +12364,10 @@ function onPosIntervalChange() {
 
 function get_Position() {
     var command = "M114";
-    if ((target_firmware == "grbl") || (target_firmware == "grbl-embedded")) {
+    if ((target_firmware ==  firmwares.Grbl) || (target_firmware ==  firmwares.GrblEmbedded)) {
         command = "?";
         SendPrinterCommand(command, false, null, null, 114, 1);
-    } else if (target_firmware == "marlin-embedded") {
+    } else if (target_firmware ==  firmwares.MarlinEmbedded) {
         SendPrinterCommand(command, false, null, null, 114, 1);
     } else SendPrinterCommand(command, false, process_Position, null, 114, 1);
 }
@@ -12385,7 +12386,7 @@ function Control_get_position_value(label, result_data) {
 }
 
 function process_Position(response) {
-    if ((target_firmware == "grbl") || (target_firmware == "grbl-embedded")) {
+    if ((target_firmware ==  firmwares.Grbl) || (target_firmware ==  firmwares.GrblEmbedded)) {
         process_grbl_position(response);
     } else {
         document.getElementById('control_x_position').innerHTML = Control_get_position_value("X:", response);
@@ -12401,7 +12402,7 @@ function control_motorsOff() {
 
 function SendHomecommand(cmd) {
     if (document.getElementById('lock_UI').checked) return;
-    if ((target_firmware == "grbl-embedded") || (target_firmware == "grbl")) {
+    if ((target_firmware ==  firmwares.GrblEmbedded) || (target_firmware ==  firmwares.Grbl)) {
         switch (cmd) {
             case 'G28':
                 cmd = '$H';
@@ -12447,13 +12448,13 @@ function SendJogcommand(cmd, feedrate) {
         feedratevalue = parseInt(document.getElementById('control_z_velocity').value);
         if (feedratevalue < 1 || isNaN(feedratevalue) || (feedratevalue === null)) {
             var letter = "Z";
-            if ((target_firmware == "grbl-embedded") && (grblaxis > 3)) letter = "Axis";
+            if ((target_firmware ==  firmwares.GrblEmbedded) && (grblaxis > 3)) letter = "Axis";
             alertdlg(translate_text_item("Out of range"), translate_text_item( letter +" Feedrate value must be at least 1 mm/min!"));
             document.getElementById('control_z_velocity').value = preferenceslist[0].z_feedrate;
             return;
         }
     }
-    if ((target_firmware == "grbl-embedded") || (target_firmware == "grbl")) {
+    if ((target_firmware ==  firmwares.GrblEmbedded) || (target_firmware ==  firmwares.Grbl)) {
         if(grblaxis > 3){
             var letter = document.getElementById('control_select_axis').value;
             cmd = cmd.replace("Z", letter);
@@ -12785,7 +12786,7 @@ function build_accept(file_filters_list) {
 }
 
 function init_files_panel(dorefresh) {
-    if (target_firmware == "smoothieware") {
+    if (target_firmware ==  firmwares.Smoothieware) {
         files_currentPath = primary_sd;
         document.getElementById('files_refresh_primary_sd_btn').innerHTML = primary_sd.substring(0, primary_sd.length - 1);
         document.getElementById('files_refresh_secondary_sd_btn').innerHTML = secondary_sd.substring(0, secondary_sd.length - 1);
@@ -12798,14 +12799,14 @@ function init_files_panel(dorefresh) {
         else document.getElementById('files_refresh_btn').style.display = "inline";
         document.getElementById('files_refresh_primary_sd_btn').style.display = "none";
         document.getElementById('files_refresh_secondary_sd_btn').style.display = "none";
-        if(target_firmware == "grbl") {
+        if(target_firmware ==  firmwares.Grbl) {
             document.getElementById('files_refresh_printer_sd_btn').style.display = 'none';
             document.getElementById('files_refresh_btn').style.display = 'none';
             document.getElementById('print_upload_btn').style.display = 'none';
             document.getElementById('files_createdir_btn').style.display = "none";
         }
     }
-    if (!((target_firmware == "marlin") || (target_firmware == "???") ||(target_firmware == "grbl"))) document.getElementById('files_createdir_btn').style.display = "inline";
+    if (!((target_firmware ==  firmwares.Marlin) || (target_firmware == "???") ||(target_firmware ==  firmwares.Grbl))) document.getElementById('files_createdir_btn').style.display = "inline";
     else document.getElementById('files_createdir_btn').style.display = "none";
     files_set_button_as_filter(files_filter_sd_list);
     var refreshlist = true;
@@ -12842,7 +12843,7 @@ function files_build_file_line(index) {
         if (entry.isdir == true) content += get_icon_svg("folder-open");
         else content += get_icon_svg("file");
         content += "</span ></td><td>";
-        if (direct_sd && (target_firmware == "marlin") && (typeof entry.sdname !== 'undefined')) {
+        if (direct_sd && (target_firmware ==  firmwares.Marlin) && (typeof entry.sdname !== 'undefined')) {
             content += entry.sdname;
         } else {
             content += entry.name;
@@ -12872,7 +12873,7 @@ function files_build_file_line(index) {
         content += "<div class='pull-right'>";
         if (entry.isprintable) {
             content += "<button class='btn btn-xs btn-default'  onclick='files_print(" + index + ")' style='padding-top: 4px;'>";
-            if ((target_firmware == "grbl-embedded") || (target_firmware == "grbl")) content += get_icon_svg("play", "1em", "1em");
+            if ((target_firmware ==  firmwares.GrblEmbedded) || (target_firmware ==  firmwares.Grbl)) content += get_icon_svg("play", "1em", "1em");
             else content += get_icon_svg("print", "1em", "1em");
             content += "</button>";
         }
@@ -12894,9 +12895,9 @@ function files_print(index) {
 
 function files_print_filename(filename) {
     var cmd = "";
-    if (target_firmware == "smoothieware") {
+    if (target_firmware ==  firmwares.Smoothieware) {
         cmd = "play " + filename;
-    } else if (target_firmware == "grbl-embedded") {
+    } else if (target_firmware ==  firmwares.GrblEmbedded) {
         SendPrinterCommand("?", false, null, null, 114, 1);
         on_autocheck_status(true);
         cmd = "[ESP220]" + filename;
@@ -12905,7 +12906,7 @@ function files_print_filename(filename) {
         if ((current_source == tft_sd) || (current_source == tft_usb))newfilename = current_source+filename;
         cmd = "M23 " + newfilename + "\nM24";
     }
-    if (target_firmware == "grbl-embedded") SendPrinterCommand(cmd);
+    if (target_firmware ==  firmwares.GrblEmbedded) SendPrinterCommand(cmd);
     else SendPrinterSilentCommand(cmd);
 }
 
@@ -12918,15 +12919,15 @@ function process_files_Createdir(answer) {
 }
 
 function files_create_dir(name) {
-    if (direct_sd && !((target_firmware == "smoothieware") && files_currentPath.startsWith(secondary_sd))) {
+    if (direct_sd && !((target_firmware ==  firmwares.Smoothieware) && files_currentPath.startsWith(secondary_sd))) {
         var cmdpath = files_currentPath;
-        if (target_firmware == "smoothieware") cmdpath = files_currentPath.substring(primary_sd.length);
+        if (target_firmware ==  firmwares.Smoothieware) cmdpath = files_currentPath.substring(primary_sd.length);
         var url = "/upload?path=" + encodeURIComponent(cmdpath) + "&action=createdir&filename=" + encodeURIComponent(name);
         document.getElementById('files_nav_loader').style.display = "block";
         SendGetHttp(url, files_directSD_list_success, files_directSD_list_failed);
     } else {
         var command = "";
-        if (target_firmware == "smoothieware") {
+        if (target_firmware ==  firmwares.Smoothieware) {
             command = "mkdir " + files_currentPath + name;
         } else {
             command = "M32 " + files_currentPath + name;
@@ -12949,9 +12950,9 @@ function process_files_Delete(answer) {
 
 function files_delete_file(index) {
     files_error_status = "Delete " + files_file_list[index].name;
-    if (direct_sd && !((target_firmware == "smoothieware") && files_currentPath.startsWith(secondary_sd))) {
+    if (direct_sd && !((target_firmware ==  firmwares.Smoothieware) && files_currentPath.startsWith(secondary_sd))) {
         var cmdpath = files_currentPath;
-        if (target_firmware == "smoothieware") cmdpath = files_currentPath.substring(primary_sd.length);
+        if (target_firmware ==  firmwares.Smoothieware) cmdpath = files_currentPath.substring(primary_sd.length);
         var url = "/upload?path=" + encodeURIComponent(cmdpath) + "&action=";
         if (files_file_list[index].isdir) {
             url += "deletedir&filename=";
@@ -12963,7 +12964,7 @@ function files_delete_file(index) {
         SendGetHttp(url, files_directSD_list_success, files_directSD_list_failed);
     } else {
         var command = "";
-        if (target_firmware == "smoothieware") {
+        if (target_firmware ==  firmwares.Smoothieware) {
             command = "rm " + files_currentPath + files_file_list[index].name;
         } else {
             command = "M30 ";
@@ -13007,9 +13008,9 @@ function files_proccess_and_update(answer) {
 function files_is_clickable(index) {
     var entry = files_file_list[index];
     if (entry.isdir) return true;
-    if (direct_sd && !(target_firmware == "smoothieware" && files_currentPath.startsWith(secondary_sd))) return true;
+    if (direct_sd && !(target_firmware ==  firmwares.Smoothieware && files_currentPath.startsWith(secondary_sd))) return true;
     //not yet implemented but possible with cat command ?
-    //if ( (target_firmware == "smoothieware") && entry.isprintable) return true;
+    //if ( (target_firmware ==  firmwares.Smoothieware) && entry.isprintable) return true;
     return false;
 }
 
@@ -13020,15 +13021,15 @@ function files_click_file(index) {
         files_refreshFiles(path, true);
         return;
     }
-    if (direct_sd && (!(target_firmware == "smoothieware" && files_currentPath.startsWith(secondary_sd)) || (target_firmware != "smoothieware"))) {
+    if (direct_sd && (!(target_firmware ==  firmwares.Smoothieware && files_currentPath.startsWith(secondary_sd)) || (target_firmware !=  firmwares.Smoothieware))) {
         //console.log("file on direct SD");
         var url = "";
-        if (target_firmware == "smoothieware") url = files_currentPath.replace(primary_sd, "/SD/") + entry.sdname;
+        if (target_firmware ==  firmwares.Smoothieware) url = files_currentPath.replace(primary_sd, "/SD/") + entry.sdname;
         else url = "/SD/" + files_currentPath + entry.sdname;
         window.open(url.replace("//", "/"));
         return;
     }
-    if (target_firmware == "smoothieware" && entry.isprintable) {
+    if (target_firmware ==  firmwares.Smoothieware && entry.isprintable) {
         //console.log("file on smoothie SD");
         //todo use a cat command ?
         return;
@@ -13037,7 +13038,7 @@ function files_click_file(index) {
 
 function files_showprintbutton(filename, isdir) {
     if (isdir == true) return false;
-    if (target_firmware == "grbl") {
+    if (target_firmware ==  firmwares.Grbl) {
         var path = files_currentPath + filename.trim();
         if ((path.indexOf(" ") != -1) || (path.indexOf("?") != -1) || (path.indexOf("!") != -1) || (path.indexOf("~") != -1)) {
             return false;
@@ -13057,9 +13058,9 @@ function files_showdeletebutton(index) {
     //can always deleted dile or dir ?
     //if /ext/ is serial it should failed as fw does not support it
     //var entry = files_file_list[index];    
-    //if (direct_sd && !( target_firmware == "smoothieware"  && files_currentPath.startsWith(secondary_sd))) return true;
+    //if (direct_sd && !( target_firmware ==  firmwares.Smoothieware  && files_currentPath.startsWith(secondary_sd))) return true;
     //if (!entry.isdir) return true;
-    //if ( target_firmware == "smoothieware"  && files_currentPath.startsWith("/sd/")) return true
+    //if ( target_firmware ==  firmwares.Smoothieware  && files_currentPath.startsWith("/sd/")) return true
     return true;
 }
 
@@ -13097,8 +13098,8 @@ function files_refreshFiles(path, usecache) {
     document.getElementById('files_list_loader').style.display = "block";
     document.getElementById('files_nav_loader').style.display = "block";
     //this is pure direct SD
-    if (direct_sd && !(target_firmware == "smoothieware" && files_currentPath.startsWith(secondary_sd))) {
-        if (target_firmware == "smoothieware") cmdpath = path.substring(4);
+    if (direct_sd && !(target_firmware ==  firmwares.Smoothieware && files_currentPath.startsWith(secondary_sd))) {
+        if (target_firmware ==  firmwares.Smoothieware) cmdpath = path.substring(4);
         var url = "/upload?path=" + encodeURI(cmdpath);
         //removeIf(production)
         var response = "{\"files\":[{\"name\":\"test2.gco\",\"shortname\":\"test2.gco\",\"size\":\"992 B\",\"datetime\":\"2000-01-01 01:00:00\"},{\"name\":\"simpl3d.gcode\",\"shortname\":\"SIMPL3~1.GCO\",\"size\":\"0 B\",\"datetime\":\"2000-01-01 01:00:00\"},{\"name\":\"patt2.g\",\"shortname\":\"patt2.g\",\"size\":\"9.73 MB\",\"datetime\":\"2000-01-01 01:00:00\"},{\"name\":\"myfolder\",\"shortname\":\"myfolder\",\"size\":\"-1\",\"datetime\":\"2016-08-01 18:15:00\"},{\"name\":\"wconfig.ok\",\"shortname\":\"wconfig.ok\",\"size\":\"1.10 KB\",\"datetime\":\"2017-01-06 14:35:54\"},{\"name\":\"gpl.txt\",\"shortname\":\"gpl.txt\",\"size\":\"34.98 KB\",\"datetime\":\"2017-04-17 20:22:32\"},{\"name\":\"m1.g\",\"shortname\":\"m1.g\",\"size\":\"17 B\",\"datetime\":\"2000-01-01 01:00:00\"},{\"name\":\"m2.g\",\"shortname\":\"m2.g\",\"size\":\"17 B\",\"datetime\":\"2000-01-01 01:00:00\"},{\"name\":\"Test4.g\",\"shortname\":\"TEST4.G\",\"size\":\"20.47 KB\",\"datetime\":\"2000-01-01 01:00:00\"},{\"name\":\"README.md\",\"shortname\":\"README.md\",\"size\":\"11.83 KB\",\"datetime\":\"2017-04-17 20:25:08\"},{\"name\":\"test file.gcode\",\"shortname\":\"TESTFI~1.GCO\",\"size\":\"11 B\",\"datetime\":\"2000-01-01 01:00:00\"},{\"name\":\"M3.g\",\"shortname\":\"M3.g\",\"size\":\"32 B\",\"datetime\":\"2000-01-01 01:00:00\"}],\"path\":\"/\",\"total\":\"14 GB\",\"used\":\"28 MB\",\"occupation\":\"1\",\"mode\":\"direct\",\"status\":\"Ok\"}";
@@ -13108,7 +13109,7 @@ function files_refreshFiles(path, usecache) {
         SendGetHttp(url, files_directSD_list_success, files_directSD_list_failed);
     } else {
         //use ls or M20
-        if (target_firmware == "smoothieware") {
+        if (target_firmware ==  firmwares.Smoothieware) {
             //workaround as ls do not like dirname ending with /
             var command = "ls -s " + cleanpath(files_currentPath);
             SendPrinterCommand(command, false, files_serial_ls_list_success, files_serial_ls_list_failed);
@@ -13234,7 +13235,7 @@ function files_serial_M20_list_success(response_text) {
                 //console.log(file_name + " is a dir");
             } else {
                 //console.log(line + " is a file");
-                if ((target_firmware == "repetier") || (target_firmware == "repetier4davinci") || (target_firmware == "marlin")) {
+                if ((target_firmware ==  firmwares.Repetier) || (target_firmware ==  firmwares.Repetier4DaVinci) || (target_firmware ==  firmwares.Marlin)) {
                     var pos = line.lastIndexOf(" ");
                     if (pos != -1) {
                         file_name = line.substr(0, pos);
@@ -13332,7 +13333,7 @@ function files_directSD_list_success(response_text) {
             var fsize = "";
             if (response.files[i].size == "-1") isdirectory = true;
             else fsize = response.files[i].size;
-            if (target_firmware == "marlin") {
+            if (target_firmware ==  firmwares.Marlin) {
                 file_name = response.files[i].shortname;
             } else {
                 file_name = response.files[i].name;
@@ -13385,7 +13386,7 @@ function files_directSD_list_failed(error_code, response) {
 }
 
 function need_up_level() {
-    if (target_firmware == "smoothieware" && (files_currentPath == primary_sd || files_currentPath == secondary_sd)) return false;
+    if (target_firmware ==  firmwares.Smoothieware && (files_currentPath == primary_sd || files_currentPath == secondary_sd)) return false;
     if (files_currentPath == "/") return false;
     return true;
 }
@@ -13464,16 +13465,16 @@ function files_build_display_filelist(displaylist) {
 
 function files_progress() {
     var command = "progress";
-    if (target_firmware != "smoothieware") command = "M27";
+    if (target_firmware !=  firmwares.Smoothieware) command = "M27";
     SendPrinterCommand(command);
 }
 
 function files_abort() {
     var command = "abort";
-    if (target_firmware != "smoothieware") {
-        if ((target_firmware == "marlin") || (target_firmware == "marlinkimbra")) {
+    if (target_firmware !=  firmwares.Smoothieware) {
+        if ((target_firmware ==  firmwares.Marlin) || (target_firmware ==  firmwares.MarlinKimbra)) {
             command = "M108\nM108\nM108\nM524\nM27";
-        } if (target_firmware == "marlin-embedded") {
+        } if (target_firmware ==  firmwares.MarlinEmbedded) {
             command = "M108\nM108\nM108\nM524\nM27";
         } else command = "M112";
     }
@@ -13487,7 +13488,7 @@ function files_select_upload() {
 function files_check_if_upload() {
     var canupload = true;
     var files = document.getElementById("files_input_file").files;
-    if (target_firmware == "marlin" && !direct_sd) {
+    if (target_firmware ==  firmwares.Marlin && !direct_sd) {
         for (var i = 0; i < files.length; i++) {
             var filename = files[i].name;
             //check base name can only by 8
@@ -13504,11 +13505,11 @@ function files_check_if_upload() {
             return;
         }
     }
-    if (direct_sd && !(target_firmware == "smoothieware" && files_currentPath.startsWith(secondary_sd))) {
+    if (direct_sd && !(target_firmware ==  firmwares.Smoothieware && files_currentPath.startsWith(secondary_sd))) {
         SendPrinterCommand("[ESP200]", false, process_check_sd_presence);
     } else {
         //try ls
-        if (target_firmware == "smoothieware") {
+        if (target_firmware ==  firmwares.Smoothieware) {
             var cmd = "ls " + cleanpath(files_currentPath);
             SendPrinterCommand(cmd, false, process_check_sd_presence);
         } else { //no reliable way to know SD is present or not so let's upload
@@ -13520,7 +13521,7 @@ function files_check_if_upload() {
 function process_check_sd_presence(answer) {
     //console.log(answer);
     //for direct SD there is a SD check
-    if (direct_sd && !(target_firmware == "smoothieware" && files_currentPath.startsWith(secondary_sd))) {
+    if (direct_sd && !(target_firmware ==  firmwares.Smoothieware && files_currentPath.startsWith(secondary_sd))) {
         if (answer.indexOf("o SD card") > -1) {
             alertdlg(translate_text_item("Upload failed"), translate_text_item("No SD card detected"));
             files_error_status = "No SD card"
@@ -13529,7 +13530,7 @@ function process_check_sd_presence(answer) {
             document.getElementById('files_status_sd_status').style.display = "table-row";
         } else files_start_upload();
     } else { //for smoothiware ls say no directory
-        if (target_firmware == "smoothieware") {
+        if (target_firmware ==  firmwares.Smoothieware) {
             if (answer.indexOf("ould not open directory") > -1) {
                 alertdlg(translate_text_item("Upload failed"), translate_text_item("No SD card detected"));
                 files_error_status = "No SD card"
@@ -13550,12 +13551,12 @@ function files_start_upload() {
     }
     var url = "/upload";
     var path = files_currentPath;
-    if (direct_sd && (target_firmware == "smoothieware") && (files_currentPath.startsWith(primary_sd))) {
+    if (direct_sd && (target_firmware ==  firmwares.Smoothieware) && (files_currentPath.startsWith(primary_sd))) {
         path = files_currentPath.substring(primary_sd.length);
     }
-    if (!direct_sd || (target_firmware == "smoothieware" && files_currentPath.startsWith(secondary_sd))) {
+    if (!direct_sd || (target_firmware ==  firmwares.Smoothieware && files_currentPath.startsWith(secondary_sd))) {
         url = "/upload_serial";
-        if (target_firmware == "smoothieware") {
+        if (target_firmware ==  firmwares.Smoothieware) {
             if (files_currentPath.startsWith(secondary_sd)) path = files_currentPath.substring(secondary_sd.length);
             else path = files_currentPath.substring(primary_sd.length);
         }
@@ -13582,7 +13583,7 @@ function files_start_upload() {
     document.getElementById('files_currentUpload_msg').innerHTML = file.name;
     document.getElementById('files_uploading_msg').style.display = "block";
     document.getElementById('files_navigation_buttons').style.display = "none";
-    if (direct_sd && !(target_firmware == "smoothieware" && files_currentPath.startsWith(secondary_sd))) {
+    if (direct_sd && !(target_firmware ==  firmwares.Smoothieware && files_currentPath.startsWith(secondary_sd))) {
         SendFileHttp(url, formData, FilesUploadProgressDisplay, files_directSD_list_success, files_directSD_list_failed);
         //console.log("send file");
     } else {
@@ -13682,7 +13683,7 @@ function control_changeaxis(){
 
 function init_grbl_panel() {
     grbl_set_probe_detected(false);
-    if (target_firmware == "grbl-embedded") {
+    if (target_firmware ==  firmwares.GrblEmbedded) {
         on_autocheck_status(true);
     }
 }
@@ -13792,9 +13793,9 @@ function onstatusIntervalChange() {
 //errorfn cannot be NULL
 function get_status() {
     var command = "?";
-    if ((target_firmware == "grbl") || (target_firmware == "grbl-embedded")) command = "?";
+    if ((target_firmware ==  firmwares.Grbl) || (target_firmware ==  firmwares.GrblEmbedded)) command = "?";
     //ID 114 is same as M114 as '?' cannot be an ID
-    if (target_firmware == "grbl")SendPrinterSilentCommand(command, null, null, 114, 1);
+    if (target_firmware ==  firmwares.Grbl)SendPrinterSilentCommand(command, null, null, 114, 1);
     else SendPrinterCommand(command, false, null, null, 114, 1);
 }
 
@@ -15248,7 +15249,7 @@ var defaultpreferenceslist = "[{\
 var preferences_file_name = '/preferences.json';
 
 function initpreferences() {
-    if ((target_firmware == "grbl-embedded") || (target_firmware == "grbl")) {
+    if ((target_firmware ==  firmwares.GrblEmbedded) || (target_firmware ==  firmwares.Grbl)) {
         defaultpreferenceslist = "[{\
                                             \"language\":\"en\",\
                                             \"enable_lock_UI\":\"false\",\
@@ -15356,7 +15357,7 @@ function initpreferences() {
                                             \"surfacespindle\":\"10000\"\
                                             }]";
 
-        if (target_firmware == "marlin-embedded") document.getElementById('DHT_pref_panel').style.display = 'none';
+        if (target_firmware ==  firmwares.MarlinEmbedded) document.getElementById('DHT_pref_panel').style.display = 'none';
         else document.getElementById('DHT_pref_panel').style.display = 'block';
 
         document.getElementById('temp_pref_panel').style.display = 'block';
@@ -15602,7 +15603,7 @@ function applypreferenceslist() {
     else document.getElementById('fan_UI').style.display = 'none';
 
 
-    if ((target_firmware == "grbl-embedded") || (target_firmware == "grbl")) {
+    if ((target_firmware ==  firmwares.GrblEmbedded) || (target_firmware ==  firmwares.Grbl)) {
         if (preferenceslist[0].enable_grbl_panel === 'true') document.getElementById('grblPanel').style.display = 'flex';
         else {
             document.getElementById('grblPanel').style.display = 'none';
@@ -15657,7 +15658,7 @@ function applypreferenceslist() {
         document.getElementById('files_refresh_btn').style.display = 'flex';
     }
     
-    if(target_firmware == "grbl") {
+    if(target_firmware ==  firmwares.Grbl) {
             document.getElementById('files_refresh_printer_sd_btn').style.display = 'none';
             document.getElementById('files_refresh_btn').style.display = 'none';
             document.getElementById('print_upload_btn').style.display = 'none';
@@ -15676,7 +15677,7 @@ function applypreferenceslist() {
     document.getElementById('statusInterval_check').value = parseInt(preferenceslist[0].interval_status);
     document.getElementById('control_xy_velocity').value = parseInt(preferenceslist[0].xy_feedrate);
     document.getElementById('control_z_velocity').value = parseInt(preferenceslist[0].z_feedrate);
-    if (target_firmware == "grbl-embedded"){
+    if (target_firmware ==  firmwares.GrblEmbedded){
         if (grblaxis > 2 )axis_Z_feedrate = parseInt(preferenceslist[0].z_feedrate);
         if (grblaxis > 3 )axis_A_feedrate = parseInt(preferenceslist[0].a_feedrate);
         if (grblaxis > 4 )axis_B_feedrate = parseInt(preferenceslist[0].b_feedrate);
@@ -15842,13 +15843,13 @@ function build_dlg_preferences_list() {
     if (typeof(preferenceslist[0].xy_feedrate) !== 'undefined') {
         document.getElementById('preferences_control_xy_velocity').value = parseInt(preferenceslist[0].xy_feedrate);
     } else document.getElementById('preferences_control_xy_velocity').value = parseInt(default_preferenceslist[0].xy_feedrate);
-    if ((target_firmware != "grbl-embedded") || (grblaxis > 2)) {
+    if ((target_firmware !=  firmwares.GrblEmbedded) || (grblaxis > 2)) {
         //z feedrate
         if (typeof(preferenceslist[0].z_feedrate) !== 'undefined') {
             document.getElementById('preferences_control_z_velocity').value = parseInt(preferenceslist[0].z_feedrate);
         } else document.getElementById('preferences_control_z_velocity').value = parseInt(default_preferenceslist[0].z_feedrate);
     }
-    if (target_firmware == "grbl-embedded") {
+    if (target_firmware ==  firmwares.GrblEmbedded) {
         if (grblaxis > 3) {
             //a feedrate
             if (typeof(preferenceslist[0].a_feedrate) !== 'undefined') {
@@ -16062,11 +16063,11 @@ function closePreferencesDialog() {
             if (document.getElementById('preferences_status_Interval_check').value != parseInt(preferenceslist[0].interval_status)) modified = true;
             //xy feedrate
             if (document.getElementById('preferences_control_xy_velocity').value != parseInt(preferenceslist[0].xy_feedrate)) modified = true;
-            if ((target_firmware != "grbl-embedded") || (grblaxis > 2)) {
+            if ((target_firmware !=  firmwares.GrblEmbedded) || (grblaxis > 2)) {
                 //z feedrate
                 if (document.getElementById('preferences_control_z_velocity').value != parseInt(preferenceslist[0].z_feedrate)) modified = true;
             }
-            if (target_firmware == "grbl-embedded") {
+            if (target_firmware ==  firmwares.GrblEmbedded) {
                 if (grblaxis > 3) {
                     //a feedrate
                     if (document.getElementById('preferences_control_a_velocity').value != parseInt(preferenceslist[0].a_feedrate)) modified = true;
@@ -16158,10 +16159,10 @@ function SavePreferences(current_preferences) {
             !Checkvalues("preferences_surfacestepover") ||
             !Checkvalues("preferences_surfacezdepth")
         ) return;
-        if ((target_firmware != "grbl-embedded") || (grblaxis > 2)) {
+        if ((target_firmware !=  firmwares.GrblEmbedded) || (grblaxis > 2)) {
             if(!Checkvalues("preferences_control_z_velocity")) return;
         }
-        if (target_firmware == "grbl-embedded") {
+        if (target_firmware ==  firmwares.GrblEmbedded) {
             if( (grblaxis > 3) && (!Checkvalues("preferences_control_a_velocity"))) return;
             if( (grblaxis > 4) && (!Checkvalues("preferences_control_b_velocity"))) return;
             if( (grblaxis > 5) && (!Checkvalues("preferences_control_c_velocity"))) return;
@@ -16203,10 +16204,10 @@ function SavePreferences(current_preferences) {
         saveprefs += "\",\"interval_positions\":\"" + document.getElementById('preferences_pos_Interval_check').value;
         saveprefs += "\",\"interval_status\":\"" + document.getElementById('preferences_status_Interval_check').value;
         saveprefs += "\",\"xy_feedrate\":\"" + document.getElementById('preferences_control_xy_velocity').value;
-        if ((target_firmware != "grbl-embedded") || (grblaxis > 2)) {
+        if ((target_firmware !=  firmwares.GrblEmbedded) || (grblaxis > 2)) {
             saveprefs += "\",\"z_feedrate\":\"" + document.getElementById('preferences_control_z_velocity').value;
         }
-        if (target_firmware == "grbl-embedded") {
+        if (target_firmware ==  firmwares.GrblEmbedded) {
             if (grblaxis > 3){
                 saveprefs += "\",\"a_feedrate\":\"" + document.getElementById('preferences_control_a_velocity').value;
             }
@@ -16460,7 +16461,7 @@ function SendPrinterSilentCommandSuccess(response) {
 
 
 function SendPrinterCommandSuccess(response) {
-    if ((target_firmware == "grbl") || (target_firmware == "grbl-embedded")) return;
+    if ((target_firmware ==  firmwares.Grbl) || (target_firmware ==  firmwares.GrblEmbedded)) return;
     if (response[response.length - 1] != '\n') Monitor_output_Update(response + "\n");
     else Monitor_output_Update(response);
 }
@@ -16635,7 +16636,7 @@ function refreshSettings(hide_setting_list) {
   setting_configList = [];
   //removeIf(production)
   var response_text =
-    '{"EEPROM":[{"F":"network","P":"0","T":"B","V":"2","H":"Wifi mode","O":[{"AP":"1"},{"STA":"2"}]},{"F":"network","P":"1","T":"S","V":"totolink_luc","S":"32","H":"Station SSID","M":"1"},{"F":"network","P":"34","T":"S","V":"********","S":"64","H":"Station Password","M":"0"},{"F":"network","P":"99","T":"B","V":"1","H":"Station IP Mode","O":[{"DHCP":"1"},{"Static":"2"}]},{"F":"network","P":"100","T":"A","V":"192.168.0.1","H":"Station Static IP"},{"F":"network","P":"104","T":"A","V":"255.255.255.0","H":"Station Static Mask"},{"F":"network","P":"108","T":"A","V":"192.168.0.12","H":"Station Static Gateway"},{"F":"network","P":"130","T":"S","V":"lucesp","H":"Hostname" ,"S":"32", "M":"1"},{"F":"network","P":"112","T":"I","V":"115200","H":"Baud Rate","O":[{"9600":"9600"},{"19200":"19200"},{"38400":"38400"},{"57600":"57600"},{"115200":"115200"},{"230400":"230400"},{"250000":"250000"}]},{"F":"network","P":"116","T":"B","V":"2","H":"Station Network Mode","O":[{"11b":"1"},{"11g":"2"},{"11n":"3"}]},{"F":"network","P":"117","T":"B","V":"0","H":"Sleep Mode","O":[{"None":"0"},{"Light":"1"},{"Modem":"2"}]},{"F":"network","P":"118","T":"B","V":"9","H":"AP Channel","O":[{"1":"1"},{"2":"2"},{"3":"3"},{"4":"4"},{"5":"5"},{"6":"6"},{"7":"7"},{"8":"8"},{"9":"9"},{"10":"10"},{"11":"11"}]},{"F":"network","P":"119","T":"B","V":"2","H":"Authentication","O":[{"Open":"0"},{"WPA":"2"},{"WPA2":"3"},{"WPA/WPA2":"4"}]},{"F":"network","P":"120","T":"B","V":"1","H":"SSID Visible","O":[{"No":"0"},{"Yes":"1"}]},{"F":"network","P":"121","T":"I","V":"80","H":"Web Port","S":"65001","M":"1"},{"F":"network","P":"125","T":"I","V":"8881","H":"Data Port","S":"65001","M":"1"},{"F":"network","P":"176","T":"S","V":"********","S":"16","H":"Admin Password","M":"1"},{"F":"network","P":"197","T":"S","V":"********","S":"16","H":"User Password","M":"1"},{"F":"network","P":"218","T":"S","V":"MYESP","S":"32","H":"AP SSID","M":"1"},{"F":"network","P":"251","T":"S","V":"********","S":"64","H":"AP Password","M":"0"},{"F":"network","P":"329","T":"B","V":"2","H":"AP IP Mode","O":[{"DHCP":"1"},{"Static":"2"}]},{"F":"network","P":"316","T":"A","V":"192.168.0.1","H":"AP Static IP"},{"F":"network","P":"320","T":"A","V":"255.255.255.0","H":"AP Static Mask"},{"F":"network","P":"324","T":"A","V":"192.168.0.1","H":"AP Static Gateway"},{"F":"network","P":"330","T":"B","V":"1","H":"AP Network Mode","O":[{"11b":"1"},{"11g":"2"}]},{"F":"printer","P":"461","T":"B","V":"7","H":"TargetFW","O":[{"Repetier":"5"},{"Repetier for Davinci":"1"},{"Marlin":"2"},{"MarlinKimbra":"3"},{"Smoothieware":"4"},{"Unknown":"0"}]},{"F":"printer","P":"129","T":"B","V":"3","H":"Temperature Refresh Time","S":"99","M":"0"},{"F":"printer","P":"164","T":"I","V":"1500","H":"XY feedrate","S":"9999","M":"1"},{"F":"printer","P":"168","T":"I","V":"110","H":"Z feedrate","S":"9999","M":"1"},{"F":"printer","P":"172","T":"I","V":"400","H":"E feedrate","S":"9999","M":"1"},{"F":"printer","P":"331","T":"S","V":"NO","S":"128","H":"Camera address","M":"0"},{"F":"printer","P":"460","T":"B","V":"3","H":"Position Refresh Time","S":"99","M":"0"}]}';
+    '{"EEPROM":[{"F":"network","P":"0","T":"B","V":"2","H":"Wifi mode","O":[{"AP":"1"},{"STA":"2"}]},{"F":"network","P":"1","T":"S","V":"totolink_luc","S":"32","H":"Station SSID","M":"1"},{"F":"network","P":"34","T":"S","V":"********","S":"64","H":"Station Password","M":"0"},{"F":"network","P":"99","T":"B","V":"1","H":"Station IP Mode","O":[{"DHCP":"1"},{"Static":"2"}]},{"F":"network","P":"100","T":"A","V":"192.168.0.1","H":"Station Static IP"},{"F":"network","P":"104","T":"A","V":"255.255.255.0","H":"Station Static Mask"},{"F":"network","P":"108","T":"A","V":"192.168.0.12","H":"Station Static Gateway"},{"F":"network","P":"130","T":"S","V":"lucesp","H":"Hostname" ,"S":"32", "M":"1"},{"F":"network","P":"112","T":"I","V":"115200","H":"Baud Rate","O":[{"9600":"9600"},{"19200":"19200"},{"38400":"38400"},{"57600":"57600"},{"115200":"115200"},{"230400":"230400"},{"250000":"250000"}]},{"F":"network","P":"116","T":"B","V":"2","H":"Station Network Mode","O":[{"11b":"1"},{"11g":"2"},{"11n":"3"}]},{"F":"network","P":"117","T":"B","V":"0","H":"Sleep Mode","O":[{"None":"0"},{"Light":"1"},{"Modem":"2"}]},{"F":"network","P":"118","T":"B","V":"9","H":"AP Channel","O":[{"1":"1"},{"2":"2"},{"3":"3"},{"4":"4"},{"5":"5"},{"6":"6"},{"7":"7"},{"8":"8"},{"9":"9"},{"10":"10"},{"11":"11"}]},{"F":"network","P":"119","T":"B","V":"2","H":"Authentication","O":[{"Open":"0"},{"WPA":"2"},{"WPA2":"3"},{"WPA/WPA2":"4"}]},{"F":"network","P":"120","T":"B","V":"1","H":"SSID Visible","O":[{"No":"0"},{"Yes":"1"}]},{"F":"network","P":"121","T":"I","V":"80","H":"Web Port","S":"65001","M":"1"},{"F":"network","P":"125","T":"I","V":"8881","H":"Data Port","S":"65001","M":"1"},{"F":"network","P":"176","T":"S","V":"********","S":"16","H":"Admin Password","M":"1"},{"F":"network","P":"197","T":"S","V":"********","S":"16","H":"User Password","M":"1"},{"F":"network","P":"218","T":"S","V":"MYESP","S":"32","H":"AP SSID","M":"1"},{"F":"network","P":"251","T":"S","V":"********","S":"64","H":"AP Password","M":"0"},{"F":"network","P":"329","T":"B","V":"2","H":"AP IP Mode","O":[{"DHCP":"1"},{"Static":"2"}]},{"F":"network","P":"316","T":"A","V":"192.168.0.1","H":"AP Static IP"},{"F":"network","P":"320","T":"A","V":"255.255.255.0","H":"AP Static Mask"},{"F":"network","P":"324","T":"A","V":"192.168.0.1","H":"AP Static Gateway"},{"F":"network","P":"330","T":"B","V":"1","H":"AP Network Mode","O":[{"11b":"1"},{"11g":"2"}]},{"F":"printer","P":"461","T":"B","V":"7","H":"TargetFW","O":[{ "Repetier":"5"},{"Repetier for Davinci":"1"},{ "Marlin":"2"},{ "Marlin Kimbra":"3"},{ "Smoothieware":"4"},{"Unknown":"0"}]},{"F":"printer","P":"129","T":"B","V":"3","H":"Temperature Refresh Time","S":"99","M":"0"},{"F":"printer","P":"164","T":"I","V":"1500","H":"XY feedrate","S":"9999","M":"1"},{"F":"printer","P":"168","T":"I","V":"110","H":"Z feedrate","S":"9999","M":"1"},{"F":"printer","P":"172","T":"I","V":"400","H":"E feedrate","S":"9999","M":"1"},{"F":"printer","P":"331","T":"S","V":"NO","S":"128","H":"Camera address","M":"0"},{"F":"printer","P":"460","T":"B","V":"3","H":"Position Refresh Time","S":"99","M":"0"}]}';
   getESPsettingsSuccess(response_text);
   return;
   //endRemoveIf(production)
@@ -16710,11 +16711,17 @@ function build_select_for_setting_list(index, subindex) {
 }
 
 function getFWshortnamefromid(value) {
-  let firmwares = ["unknown","repetier4davinci","marlin","marlinkimbra","smoothieware","repetier","grbl","grbl-embedded"];
-  if(isNaN(value)){
-    value = 0;
+  switch(value)
+  {
+    case "1": return firmwares.Repetier4DaVinci;
+    case "2": return firmwares.Marlin;
+    case "3": return firmwares.MarlinKimbra;
+    case "4": return firmwares.Smoothieware;
+    case "5": return firmwares.Repetier;
+    case "6": return firmwares.Grbl;
+    case "7": return firmwares.GrblEmbedded;
+    default: return firmwares.Unknown;
   }
-  return firmwares[value];
 }
 
 function update_UI_setting() {
@@ -17286,7 +17293,7 @@ function setupdlg() {
     document.getElementById("wizard_line3").style.background = "#e0e0e0";
     document.getElementById("step3link").disabled = true;
     document.getElementById("step3link").className = "steplinks disabled";
-    if (!direct_sd || (target_firmware == "grbl-embedded") || (target_firmware == "marlin-embedded")) {
+    if (!direct_sd || (target_firmware ==  firmwares.GrblEmbedded) || (target_firmware ==  firmwares.MarlinEmbedded)) {
         document.getElementById("step3link").style.display = 'none';
         document.getElementById("wizard_line4").style.display = 'none';
     } else {
@@ -17334,7 +17341,7 @@ function continue_setup_wizard() {
             enablestep2();
             break;
         case 3:
-            if (!direct_sd || (target_firmware == "grbl-embedded") || (target_firmware == "marlin-embedded")) {
+            if (!direct_sd || (target_firmware ==  firmwares.GrblEmbedded) || (target_firmware ==  firmwares.MarlinEmbedded)) {
                 active_wizard_page++;
                 document.getElementById("wizard_line3").style.background = "#337AB7";
                 enablestep4();
@@ -17363,7 +17370,7 @@ function enablestep1() {
     document.getElementById("step1link").disabled = "";
     document.getElementById("step1link").className = document.getElementById("step1link").className.replace(" disabled", "");
     content += "<h4>" + translate_text_item("ESP3D Settings") + "</h4><hr>";
-    if (!((target_firmware == "grbl-embedded") || (target_firmware == "marlin-embedded"))) {
+    if (!((target_firmware ==  firmwares.GrblEmbedded) || (target_firmware ==  firmwares.MarlinEmbedded))) {
         index = get_index_from_eeprom_pos(EP_TARGET_FW);
         content += translate_text_item("Save your printer's firmware base:");
         content += build_control_from_index(index);
@@ -17435,7 +17442,7 @@ function enablestep2() {
     content += translate_text_item("Password for access point:") + "<table><tr><td>";
     content += build_control_from_index(index);
     content += "</td></tr></table>";
-    if (!((target_firmware == "grbl-embedded") || (target_firmware == "marlin-embedded"))) {
+    if (!((target_firmware ==  firmwares.GrblEmbedded) || (target_firmware ==  firmwares.MarlinEmbedded))) {
         content += "<hr>\n";
         content += translate_text_item("Define security:") + "<table><tr><td>";
         index = get_index_from_eeprom_pos(EP_AUTH_TYPE);
@@ -17451,7 +17458,7 @@ function enablestep2() {
 function define_sd_role(index) {
     if (setting_configList[index].defaultvalue == 1) {
         document.getElementById("setup_SD").style.display = "block";
-        if (target_firmware == "smoothieware") document.getElementById("setup_primary_SD").style.display = "block";
+        if (target_firmware ==  firmwares.Smoothieware) document.getElementById("setup_primary_SD").style.display = "block";
         else document.getElementById("setup_primary_SD").style.display = "none";
     } else {
         document.getElementById("setup_SD").style.display = "none";
@@ -18893,7 +18900,7 @@ function get_Temperatures() {
   process_Temperatures(response);
   return;
   //endRemoveIf(production)
-  if (target_firmware == "marlin-embedded")
+  if (target_firmware ==  firmwares.MarlinEmbedded)
     SendPrinterCommand(command, false, null, null, 105, 1);
   else SendPrinterCommand(command, false, process_Temperatures, null, 105, 1);
 }
@@ -19105,26 +19112,26 @@ function temperature_heatSet(target) {
 
 function supportsRedundantTemperatures() {
   return (
-    target_firmware == "marlin-embedded" ||
-    target_firmware == "marlin" ||
-    target_firmware == "smoothieware"
+    target_firmware ==  firmwares.MarlinEmbedded ||
+    target_firmware ==  firmwares.Marlin ||
+    target_firmware ==  firmwares.Smoothieware
   );
 }
 
 function supportsProbeTemperatures() {
   return (
-    target_firmware == "marlin-embedded" ||
-    target_firmware == "marlin" ||
-    target_firmware == "smoothieware"
+    target_firmware ==  firmwares.MarlinEmbedded ||
+    target_firmware ==  firmwares.Marlin ||
+    target_firmware ==  firmwares.Smoothieware
   );
 }
 
 function supportsChamberTemperatures() {
   return (
-    target_firmware == "marlin-embedded" ||
-    target_firmware == "marlin" ||
-    target_firmware == "marlinkimbra" ||
-    target_firmware == "smoothieware"
+    target_firmware ==  firmwares.MarlinEmbedded ||
+    target_firmware ==  firmwares.Marlin ||
+    target_firmware ==  firmwares.MarlinKimbra ||
+    target_firmware ==  firmwares.Smoothieware
   );
 }
 
@@ -19281,8 +19288,8 @@ function updatedlg() {
     document.getElementById('uploadfw-button').style.display = 'none';
     document.getElementById('updatemsg').innerHTML = "";
     document.getElementById('fw-select').value = "";
-    if (target_firmware == "grbl-embedded") document.getElementById('fw_update_dlg_title').innerHTML = translate_text_item("ESP3D Update").replace("ESP3D", "GRBL_ESP32");
-    if (target_firmware == "marlin-embedded") document.getElementById('fw_update_dlg_title').innerHTML = translate_text_item("ESP3D Update").replace("ESP3D", "Marlin");
+    if (target_firmware ==  firmwares.GrblEmbedded) document.getElementById('fw_update_dlg_title').innerHTML = translate_text_item("ESP3D Update").replace("ESP3D", "GRBL_ESP32");
+    if (target_firmware ==  firmwares.MarlinEmbedded) document.getElementById('fw_update_dlg_title').innerHTML = translate_text_item("ESP3D Update").replace("ESP3D",  firmwares.Marlin);
     showModal();
 }
 
