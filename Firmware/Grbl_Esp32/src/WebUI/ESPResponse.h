@@ -21,14 +21,17 @@
 */
 
 #if defined(ENABLE_HTTP) && defined(ENABLE_WIFI)
-class WebServer;
+#include <WebServer.h>
 #endif
 
 namespace WebUI {
     class ESPResponseStream {
     public:
 #if defined(ENABLE_HTTP) && defined(ENABLE_WIFI)
+        WebServer* _webserver;
+        String     _buffer;
         ESPResponseStream(WebServer* webserver);
+        WebServer* webserver() { return _webserver;}
 #endif
         ESPResponseStream(uint8_t client, bool byid = true);
         ESPResponseStream();
@@ -43,10 +46,5 @@ namespace WebUI {
     private:
         uint8_t _client;
         bool    _header_sent;
-
-#if defined(ENABLE_HTTP) && defined(ENABLE_WIFI)
-        WebServer* _webserver;
-        String     _buffer;
-#endif
     };
 }
