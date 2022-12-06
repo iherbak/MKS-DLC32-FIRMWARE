@@ -585,7 +585,7 @@ void report_realtime_status(uint8_t client) {
     char status[244];
     char temp[MAX_N_AXIS * 20];
 
-    strcpy(status, "<");
+    strcpy(status, "<State:");
     strcat(status, report_state_text());
 
     // Report position
