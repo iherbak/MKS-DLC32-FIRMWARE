@@ -28,11 +28,7 @@
 
 #define USE_BOARD_V2_0
 
-#ifdef USE_BOARD_V2_0
-    #define BOARD_NAME              "Board:MKS DLC32 COREXY V2.0"
-#else 
-    #define BOARD_NAME              "Board:MKS DLC32 COREXY V1.0"
-#endif
+#define BOARD_NAME              "Board:MKS CoreXY DLC32 V1.1"
 #define FW_NAME                 "Firmware:DLC32 V1.2.001(DLC32.8M.H35.0911)"
 
 
@@ -170,10 +166,7 @@
 #define DEFAULT_SPINDLE_FREQ        1000   // 1KHz
 #define DEFAULT_LASER_FULL_POWER    1000
 #define DEFAULT_SPINDLE_MAX_VALUE   1000  
-#define DEFAULT_SPINDLE_MIN_VALUE   0
+#define DEFAULT_SPINDLE_MIN_VALUE   0         
 
-#ifdef USE_BOARD_V2_0
-    #define DEFAULT_BEEP_STATUS                 1
-    #define DEFAULT_LANGUAGE_STATUS             1       // default simple engliash
-#endif
-
+#define DEFAULT_BEEP_STATUS                 1
+#define DEFAULT_LANGUAGE_STATUS             1       // default simple engliash
