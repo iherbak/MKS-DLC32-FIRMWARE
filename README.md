@@ -17,6 +17,6 @@ Change -DMACHINE_FILENAME to your desired version
 Then compile and upload.
 
 
-Changes
+## Changes
 - No [ESP800] use /firmware endpoint instead for a nice parsable json insted
 - Websocket mesages now Starts like "<State:" so better for parsing
