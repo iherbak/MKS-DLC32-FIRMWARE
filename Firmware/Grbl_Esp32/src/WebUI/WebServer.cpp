@@ -23,7 +23,6 @@
 #if defined(ENABLE_WIFI) && defined(ENABLE_HTTP)
 
 #include "WifiServices.h"
-#include <ArduinoJson.h>
 #include "ESPResponse.h"
 #include "Serial2Socket.h"
 #include "WebServer.h"
@@ -595,62 +594,74 @@ namespace WebUI
         }
     }
 
+    String Web_Server::createJsonProperty(String key, String value, boolean lastProperty)
+    {
+        String ret = "\"" + key + "\":" + "\"" + value + "\"";
+        if (lastProperty)
+        {
+            ret += ",";
+        }
+        return ret;
+    }
+
     void Web_Server::handle_fwinfo()
     {
-        StaticJsonDocument<200> fwdoc;
-        fwdoc["FW_Version"] = GRBL_VERSION;
-        fwdoc["FW_Build"] = GRBL_VERSION_BUILD;
-        fwdoc["FW_Target"] = "grbl-embedded";
+        String json = "{";
+        json += createJsonProperty("FW_Version", GRBL_VERSION);
+        json += createJsonProperty("FW_Build", GRBL_VERSION_BUILD);
+        json += createJsonProperty("FW_Target", "grbl-embedded");
 
 #ifdef ENABLE_SD_CARD
-        fwdoc["FW_HW"] = "Direct SD";
+        json += createJsonProperty("FW_HW", "Direct SD");
 #else
-        fwdoc["FW_HW"] = "No SD";
+        json += createJsonProperty("FW_HW", "No SD");
 #endif
-        fwdoc["Primary_sd"] = "/sd";
-        fwdoc["Secondary_sd"] = "none";
+        json += createJsonProperty("Primary_SD", "/sd");
+        json += createJsonProperty("Secondary_sd", "none");
 #ifdef ENABLE_AUTHENTICATION
-        fwdoc["Authentication"] = "yes";
+        json += createJsonProperty("Authentication", "yes");
 #else
-        fwdoc["Authentication"] = "no";
+        json += createJsonProperty("Authentication", "no");
 #endif
 #if defined(ENABLE_WIFI)
 #if defined(ENABLE_HTTP)
-        JsonObject webcomm = fwdoc.createNestedObject("Webcommunication");
-        webcomm["Mode"] = "Sync";
-        webcomm["Websocket_Port"] = String(web_server.port() + 1);
+        json += createJsonProperty("Webcommunication", ":", true);
+        json += "{";
+        json += createJsonProperty("Mode", "Sync");
+        json += createJsonProperty("Websocket_Port", String(web_server.port() + 1));
         switch (WiFi.getMode())
         {
         case WIFI_MODE_AP:
-            webcomm["Wifi_Ip"] = WiFi.softAPIP().toString();
+            json += createJsonProperty("Wifi_IP", WiFi.softAPIP().toString(), true);
             break;
         case WIFI_MODE_STA:
-            webcomm["Wifi_Ip"] = WiFi.localIP().toString();
+            json += createJsonProperty("Wifi_IP", WiFi.localIP().toString(), true);
             break;
         case WIFI_MODE_APSTA:
-            webcomm["Wifi_Ip"] = WiFi.softAPIP().toString();
+            json += createJsonProperty("Wifi_IP", WiFi.softAPIP().toString(), true);
             break;
         default:
-            webcomm["Wifi_Ip"] = "0.0.0.0";
+            json += createJsonProperty("Wifi_IP", "0.0.0.0", true);
             break;
         }
+        json += "},";
 #endif
-        webcomm["Hostname"] = wifi_config.Hostname();
+        json += createJsonProperty("Hostname", wifi_config.Hostname());
         if (WiFi.getMode() == WIFI_AP)
         {
-            webcomm["Wifi_Mode"] = "AP";
+            json += createJsonProperty("Wifi_Mode", "AP");
         }
         else
         {
-            webcomm["Wifi_Mode"] = "STA";
+            json += createJsonProperty("Wifi_Mode", "STA");
         }
 #endif
         // to save time in decoding `?`
-        webcomm["Axis_count"] = String(number_axis->get());
-        String fwResponse;
-        serializeJson(fwdoc, fwResponse);
+        json += createJsonProperty("Axis_count", String(number_axis->get()), true);
+        json += "}";
+
         _webserver->sendHeader("Cache-Control", "no-cache");
-        _webserver->send(200, "application/json", fwResponse);
+        _webserver->send(200, "application/json", json);
     }
     // login status check
     void Web_Server::handle_login()
@@ -861,9 +872,14 @@ namespace WebUI
         }
 #else
         _webserver->sendHeader("Cache-Control", "no-cache");
-        _webserver->send(200, "application/json", "{\"status\":\"Ok\",\"authentication_lvl\":\"admin\"}");
+        String json = "{";
+        json += createJsonProperty("status", "Ok");
+        json += createJsonProperty("authentication_lvl", "admin", true);
+        json += "}";
+        _webserver->send(200, "application/json", json);
 #endif
     }
+
     // SPIFFS
     // SPIFFS files list and file commands
     void Web_Server::handleFileList()
@@ -1027,8 +1043,8 @@ namespace WebUI
         }
 
         File dir = SPIFFS.open(ptmp);
-        jsonfile += "\"files\":[";
-        bool firstentry = true;
+        jsonfile += createJsonProperty("files", "[", true);
+
         String subdirlist = "";
         File fileparsed = dir.openNextFile();
         while (fileparsed)
@@ -1075,38 +1091,24 @@ namespace WebUI
             }
             if (addtolist)
             {
-                if (!firstentry)
-                {
-                    jsonfile += ",";
-                }
-                else
-                {
-                    firstentry = false;
-                }
                 jsonfile += "{";
-                jsonfile += "\"name\":\"";
-                jsonfile += filename;
-                jsonfile += "\",\"size\":\"";
-                jsonfile += size;
-                jsonfile += "\"";
-                jsonfile += "}";
+                jsonfile += createJsonProperty("name", filename);
+                jsonfile += createJsonProperty("size", size, true);
+                jsonfile += "},";
             }
             fileparsed = dir.openNextFile();
         }
         jsonfile += "],";
-        jsonfile += "\"path\":\"" + path + "\",";
-        jsonfile += "\"status\":\"" + status + "\",";
+        jsonfile += createJsonProperty("path", path);
+        jsonfile += createJsonProperty("status", status);
         size_t totalBytes;
         size_t usedBytes;
         totalBytes = SPIFFS.totalBytes();
         usedBytes = SPIFFS.usedBytes();
-        jsonfile += "\"total\":\"" + ESPResponseStream::formatBytes(totalBytes) + "\",";
-        jsonfile += "\"used\":\"" + ESPResponseStream::formatBytes(usedBytes) + "\",";
-        jsonfile.concat(F("\"occupation\":\""));
-        jsonfile += String(100 * usedBytes / totalBytes);
-        jsonfile += "\"";
+        jsonfile += createJsonProperty("total", ESPResponseStream::formatBytes(totalBytes));
+        jsonfile += createJsonProperty("used", ESPResponseStream::formatBytes(usedBytes));
+        jsonfile += createJsonProperty("occupation", String(100 * usedBytes / totalBytes), true);
         jsonfile += "}";
-        path = "";
         _webserver->sendHeader("Cache-Control", "no-cache");
         _webserver->send(200, "application/json", jsonfile);
     }
@@ -1323,9 +1325,9 @@ namespace WebUI
             return;
         }
 
-        String jsonfile = "{\"status\":\"";
-        jsonfile += String(int32_t(uint8_t(_upload_status)));
-        jsonfile += "\"}";
+        String jsonfile = "{";
+        jsonfile += createJsonProperty("status", String(int32_t(uint8_t(_upload_status))), true);
+        jsonfile += "}";
 
         // send status
         _webserver->sendHeader("Cache-Control", "no-cache");
@@ -1528,7 +1530,10 @@ namespace WebUI
         if (is_authenticated() == AuthenticationLevel::LEVEL_GUEST)
         {
             _upload_status = UploadStatusType::NONE;
-            _webserver->send(401, "application/json", "{\"status\":\"Authentication failed!\"}");
+            String json = "{";
+            json += createJsonProperty("status", "Authentication failed!", true);
+            json += "}";
+            _webserver->send(401, "application/json", json);
             return;
         }
 
@@ -1545,10 +1550,12 @@ namespace WebUI
         SDState state = get_sd_state(true);
         if (state != SDState::Idle)
         {
-            String status = "{\"status\":\"";
-            status += state == SDState::NotPresent ? "No SD Card\"}" : "Busy\"}";
+            String json = "{";
+            json += createJsonProperty("status", state == SDState::NotPresent ? "No SD Card" : "Busy", true);
+            json += "}";
+
             _webserver->sendHeader("Cache-Control", "no-cache");
-            _webserver->send(200, "application/json", status);
+            _webserver->send(200, "application/json", json);
             return;
         }
         set_sd_state(SDState::BusyParsing);
@@ -1661,7 +1668,7 @@ namespace WebUI
 
         // TODO Settings - consider using the JSONEncoder class
         String jsonfile = "{";
-        jsonfile += "\"files\":[";
+        jsonfile += createJsonProperty("files", "[", true);
 
         if (path != "/")
         {
@@ -1669,10 +1676,11 @@ namespace WebUI
         }
         if (path != "/" && !SD.exists(path))
         {
-            String s = "{\"status\":\" ";
-            s += path;
-            s += " does not exist on SD Card\"}";
-            _webserver->send(200, "application/json", s);
+            String json = "{";
+            json += createJsonProperty("status", path + "does not exist on SD Card", true);
+            json += "}";
+
+            _webserver->send(200, "application/json", json);
             SD.end();
             set_sd_state(SDState::Idle);
             return;
@@ -1690,39 +1698,33 @@ namespace WebUI
             while (entry)
             {
                 COMMANDS::wait(1);
-                if (i > 0)
-                {
-                    jsonfile += ",";
-                }
-                jsonfile += "{\"name\":\"";
                 String tmpname = entry.name();
                 int pos = tmpname.lastIndexOf("/");
                 tmpname = tmpname.substring(pos + 1);
-                jsonfile += tmpname;
-                jsonfile += "\",\"shortname\":\""; // No need here
-                jsonfile += tmpname;
-                jsonfile += "\",\"size\":\"";
+
+                jsonfile += "{";
+                jsonfile += createJsonProperty("name", tmpname);
+                jsonfile += createJsonProperty("shortname", tmpname);
                 if (entry.isDirectory())
                 {
-                    jsonfile += "-1";
+                    jsonfile += createJsonProperty("size", "-1");
                 }
                 else
                 {
                     // files have sizes, directories do not
-                    jsonfile += ESPResponseStream::formatBytes(entry.size());
+                    jsonfile += createJsonProperty("size", ESPResponseStream::formatBytes(entry.size()));
                 }
-                jsonfile += "\",\"datetime\":\"";
+                jsonfile += createJsonProperty("datetime", "");
                 // TODO - can be done later
-                jsonfile += "\"}";
+                jsonfile += "}";
                 i++;
                 entry.close();
                 entry = dir.openNextFile();
             }
             dir.close();
         }
-        jsonfile += "],\"path\":\"";
-        jsonfile += path + "\",";
-        jsonfile += "\"total\":\"";
+        jsonfile += "]";
+        jsonfile += createJsonProperty("path", path);
         String stotalspace, susedspace;
         // SDCard are in GB or MB but no less
         totalspace = SD.totalBytes();
@@ -1741,27 +1743,23 @@ namespace WebUI
         }
         if (totalspace)
         {
-            jsonfile += stotalspace;
+            jsonfile += createJsonProperty("total", stotalspace);
         }
         else
         {
-            jsonfile += "-1";
+            jsonfile += createJsonProperty("total", "-1");
         }
-        jsonfile += "\",\"used\":\"";
-        jsonfile += susedspace;
-        jsonfile += "\",\"occupation\":\"";
+        jsonfile += createJsonProperty("used", susedspace);
         if (totalspace)
         {
-            jsonfile += String(occupedspace);
+            jsonfile += createJsonProperty("occupation", String(occupedspace));
         }
         else
         {
-            jsonfile += "-1";
+            jsonfile += createJsonProperty("occupation", "-1");
         }
-        jsonfile += "\",";
-        jsonfile += "\"mode\":\"direct\",";
-        jsonfile += "\"status\":\"";
-        jsonfile += sstatus + "\"";
+        jsonfile += createJsonProperty("mode", "direct");
+        jsonfile += createJsonProperty("status", sstatus, true);
         jsonfile += "}";
         _webserver->sendHeader("Cache-Control", "no-cache");
         _webserver->send(200, "application/json", jsonfile);

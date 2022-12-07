@@ -79,6 +79,7 @@ namespace WebUI {
         static void handle_root();
         static void handle_login();
         static void handle_fwinfo();
+        static String createJsonProperty(String key, String value, boolean lastProperty = false);
         static void handle_not_found();
         static void _handle_web_command(bool);
         static void handle_web_command() { _handle_web_command(false); }
