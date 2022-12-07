@@ -19,4 +19,4 @@ Then compile and upload.
 
 ## Changes
 - No [ESP800] use /firmware endpoint instead for a nice parsable json instead
-- Websocket messages now start like "<State:" so better for parsing
+- Websocket status messages now start like "<State:" so better for parsing
