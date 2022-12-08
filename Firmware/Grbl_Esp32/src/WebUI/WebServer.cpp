@@ -636,32 +636,32 @@ namespace WebUI
         switch (WiFi.getMode())
         {
         case WIFI_MODE_AP:
-            json += createJsonProperty("Wifi_Ip", WiFi.softAPIP().toString(), true);
+            json += createJsonProperty("Wifi_Ip", WiFi.softAPIP().toString());
             break;
         case WIFI_MODE_STA:
-            json += createJsonProperty("Wifi_Ip", WiFi.localIP().toString(), true);
+            json += createJsonProperty("Wifi_Ip", WiFi.localIP().toString());
             break;
         case WIFI_MODE_APSTA:
-            json += createJsonProperty("Wifi_Ip", WiFi.softAPIP().toString(), true);
+            json += createJsonProperty("Wifi_Ip", WiFi.softAPIP().toString());
             break;
         default:
-            json += createJsonProperty("Wifi_Ip", "0.0.0.0", true);
+            json += createJsonProperty("Wifi_Ip", "0.0.0.0");
             break;
         }
-        json += "},";
 #endif
         json += createJsonProperty("Hostname", wifi_config.Hostname());
         if (WiFi.getMode() == WIFI_AP)
         {
-            json += createJsonProperty("Wifi_Mode", "AP");
+            json += createJsonProperty("Wifi_Mode", "AP",true);
         }
         else
         {
-            json += createJsonProperty("Wifi_Mode", "STA");
+            json += createJsonProperty("Wifi_Mode", "STA",true);
         }
+        json += "},";
 #endif
         // to save time in decoding `?`
-        json += createJsonProperty("Axis_count", String(number_axis->get()), true);
+        json += createJsonProperty("Axis_Count", String(number_axis->get()), true);
         json += "}";
 
         _webserver->sendHeader("Cache-Control", "no-cache");
