@@ -1,5 +1,6 @@
 # MKS-DLC32-FIRMWARE
-The source code of MKS DLC32.
+- Modified source code for my UI https://github.com/iherbak/DLC32-Angular
+- Other UI-s are not compatible with this firmware because of changes see below
 
 ## Environment construction:
 
@@ -13,5 +14,9 @@ Open Firmware with vscode, and platformIO will be started, In the platform.ini f
 
 Change -DMACHINE_FILENAME to your desired version
 
-Then compile and download.
+Then compile and upload.
 
+
+## Changes
+- No [ESP800] use /firmware endpoint instead for a nice parsable json instead
+- Websocket status messages now start like "<State:" so better for parsing
