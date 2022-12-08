@@ -594,10 +594,14 @@ namespace WebUI
         }
     }
 
-    String Web_Server::createJsonProperty(String key, String value, boolean lastProperty)
+    String Web_Server::createJsonProperty(String key, String value, boolean lastProperty, boolean isobject)
     {
-        String ret = "\"" + key + "\":" + "\"" + value + "\"";
-        if (lastProperty)
+        String ret = "\"" + key + "\":";
+        if (!isobject)
+        {
+            ret += "\"" + value + "\"";
+        }
+        if (!lastProperty)
         {
             ret += ",";
         }
@@ -616,8 +620,8 @@ namespace WebUI
 #else
         json += createJsonProperty("FW_HW", "No SD");
 #endif
-        json += createJsonProperty("Primary_SD", "/sd");
-        json += createJsonProperty("Secondary_sd", "none");
+        json += createJsonProperty("Primary_Sd", "/sd");
+        json += createJsonProperty("Secondary_Sd", "none");
 #ifdef ENABLE_AUTHENTICATION
         json += createJsonProperty("Authentication", "yes");
 #else
@@ -625,23 +629,23 @@ namespace WebUI
 #endif
 #if defined(ENABLE_WIFI)
 #if defined(ENABLE_HTTP)
-        json += createJsonProperty("Webcommunication", ":", true);
+        json += createJsonProperty("Webcommunication", "", true, true);
         json += "{";
         json += createJsonProperty("Mode", "Sync");
         json += createJsonProperty("Websocket_Port", String(web_server.port() + 1));
         switch (WiFi.getMode())
         {
         case WIFI_MODE_AP:
-            json += createJsonProperty("Wifi_IP", WiFi.softAPIP().toString(), true);
+            json += createJsonProperty("Wifi_Ip", WiFi.softAPIP().toString(), true);
             break;
         case WIFI_MODE_STA:
-            json += createJsonProperty("Wifi_IP", WiFi.localIP().toString(), true);
+            json += createJsonProperty("Wifi_Ip", WiFi.localIP().toString(), true);
             break;
         case WIFI_MODE_APSTA:
-            json += createJsonProperty("Wifi_IP", WiFi.softAPIP().toString(), true);
+            json += createJsonProperty("Wifi_Ip", WiFi.softAPIP().toString(), true);
             break;
         default:
-            json += createJsonProperty("Wifi_IP", "0.0.0.0", true);
+            json += createJsonProperty("Wifi_Ip", "0.0.0.0", true);
             break;
         }
         json += "},";
@@ -1668,8 +1672,8 @@ namespace WebUI
 
         // TODO Settings - consider using the JSONEncoder class
         String jsonfile = "{";
-        jsonfile += createJsonProperty("files", "[", true);
-
+        jsonfile += createJsonProperty("files", "", true, true);
+        jsonfile += "[";
         if (path != "/")
         {
             path = path.substring(0, path.length() - 1);
@@ -1694,7 +1698,6 @@ namespace WebUI
             }
             dir.rewindDirectory();
             File entry = dir.openNextFile();
-            int i = 0;
             while (entry)
             {
                 COMMANDS::wait(1);
@@ -1714,16 +1717,18 @@ namespace WebUI
                     // files have sizes, directories do not
                     jsonfile += createJsonProperty("size", ESPResponseStream::formatBytes(entry.size()));
                 }
-                jsonfile += createJsonProperty("datetime", "");
+                jsonfile += createJsonProperty("datetime", "",true);
                 // TODO - can be done later
                 jsonfile += "}";
-                i++;
                 entry.close();
                 entry = dir.openNextFile();
+                if(entry){
+                    jsonfile += ",";
+                }
             }
             dir.close();
         }
-        jsonfile += "]";
+        jsonfile += "],";
         jsonfile += createJsonProperty("path", path);
         String stotalspace, susedspace;
         // SDCard are in GB or MB but no less
