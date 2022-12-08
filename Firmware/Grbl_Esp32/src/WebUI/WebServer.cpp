@@ -1047,7 +1047,8 @@ namespace WebUI
         }
 
         File dir = SPIFFS.open(ptmp);
-        jsonfile += createJsonProperty("files", "[", true);
+        jsonfile += createJsonProperty("files", "", true, true);
+        jsonfile += "[";
 
         String subdirlist = "";
         File fileparsed = dir.openNextFile();
@@ -1098,9 +1099,12 @@ namespace WebUI
                 jsonfile += "{";
                 jsonfile += createJsonProperty("name", filename);
                 jsonfile += createJsonProperty("size", size, true);
-                jsonfile += "},";
+                jsonfile += "}";
             }
             fileparsed = dir.openNextFile();
+            if(fileparsed){
+                jsonfile += ",";
+            }
         }
         jsonfile += "],";
         jsonfile += createJsonProperty("path", path);
@@ -1717,12 +1721,13 @@ namespace WebUI
                     // files have sizes, directories do not
                     jsonfile += createJsonProperty("size", ESPResponseStream::formatBytes(entry.size()));
                 }
-                jsonfile += createJsonProperty("datetime", "",true);
+                jsonfile += createJsonProperty("datetime", "", true);
                 // TODO - can be done later
                 jsonfile += "}";
                 entry.close();
                 entry = dir.openNextFile();
-                if(entry){
+                if (entry)
+                {
                     jsonfile += ",";
                 }
             }
