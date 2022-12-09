@@ -26,10 +26,5 @@ void setup() {
 
 void loop() {
   _mc_task_init();
-  
-  while(1) {
-
-    run_once();
-
-  }
+  run_once();
 }

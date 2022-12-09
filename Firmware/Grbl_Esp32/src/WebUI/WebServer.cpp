@@ -163,7 +163,7 @@ namespace WebUI
 
 #ifdef ENABLE_SD_CARD
         // Direct SD management
-        _webserver->on("/upload", HTTP_ANY, handle_direct_SDFileList, SDFile_direct_upload);
+        _webserver->on("/SD", HTTP_ANY, handle_direct_SDFileList, SDFile_direct_upload);
         // _webserver->on("/SD", HTTP_ANY, handle_SDCARD);
 #endif
 
@@ -620,7 +620,7 @@ namespace WebUI
 #else
         json += createJsonProperty("FW_HW", "No SD");
 #endif
-        json += createJsonProperty("Primary_Sd", "/sd");
+        json += createJsonProperty("Primary_Sd", "/SD");
         json += createJsonProperty("Secondary_Sd", "none");
 #ifdef ENABLE_AUTHENTICATION
         json += createJsonProperty("Authentication", "yes");

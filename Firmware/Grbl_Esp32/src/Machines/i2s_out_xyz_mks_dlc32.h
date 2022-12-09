@@ -26,7 +26,7 @@
 
 #define USR_USER_KB  
 
-#define USR_Z_MOTOR
+//#define USR_Z_MOTOR
 
 // #define USE_BEEP
 
@@ -128,15 +128,15 @@
 
 // === Default settings
 // #define DEFAULT_STEP_PULSE_MICROSECONDS I2S_OUT_USEC_PER_PULSE
-#define DEFAULT_STEP_PULSE_MICROSECONDS     10
+#define DEFAULT_STEP_PULSE_MICROSECONDS     6
 
 #define DEFAULT_STEPPER_IDLE_LOCK_TIME      25
 
 #define DEFAULT_STEPPING_INVERT_MASK    	0 // uint8_t
-#define DEFAULT_DIRECTION_INVERT_MASK   	1 // uint8_t
+#define DEFAULT_DIRECTION_INVERT_MASK   	5 // uint8_t
 #define DEFAULT_INVERT_ST_ENABLE        	0 // boolean
-#define DEFAULT_INVERT_LIMIT_PINS       	1 // boolean
-#define DEFAULT_INVERT_PROBE_PIN        	1 // boolean
+#define DEFAULT_INVERT_LIMIT_PINS       	0 // boolean
+#define DEFAULT_INVERT_PROBE_PIN        	0 // boolean
 
 #define DEFAULT_STATUS_REPORT_MASK 			1
 
@@ -150,7 +150,7 @@
 #define DEFAULT_HOMING_CYCLE_0              (bit(X_AXIS) | bit(Y_AXIS))
 #define DEFAULT_HOMING_CYCLE_1              0           // (bit(Z_AXIS))        /* If you want star Z axis, select (bit(Z_AXIS)) */
 #define DEFAULT_HOMING_ENABLE           	0           // false
-#define DEFAULT_HOMING_DIR_MASK         	1           // move positive dir Z,negative X,Y
+#define DEFAULT_HOMING_DIR_MASK         	3           // move positive dir Z,negative X,Y
 #define DEFAULT_HOMING_FEED_RATE        	300.0       // mm/min
 #define DEFAULT_HOMING_SEEK_RATE        	1000.0      // mm/min
 #define DEFAULT_HOMING_DEBOUNCE_DELAY   	250         // msec (0-65k)
@@ -163,7 +163,7 @@
 #endif
 #define DEFAULT_SPINDLE_RPM_MIN 0.0 // rpm
 
-#define DEFAULT_LASER_MODE 0 // false
+#define DEFAULT_LASER_MODE 1 // false
 
 #define DEFAULT_X_STEPS_PER_MM 80.0
 #define DEFAULT_Y_STEPS_PER_MM 80.0
