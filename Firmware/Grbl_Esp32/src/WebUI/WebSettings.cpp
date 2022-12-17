@@ -258,56 +258,6 @@ namespace WebUI
         webPrintln(")");
     }
 
-    static Error showFwInfo(char *parameter, AuthenticationLevel auth_level)
-    { // ESP800
-        webPrint("FW version:");
-        webPrint(GRBL_VERSION);
-        webPrint(" (");
-        webPrint(GRBL_VERSION_BUILD);
-        webPrint(")"
-                 " # FW target:grbl-embedded  # FW HW:");
-#ifdef ENABLE_SD_CARD
-        webPrint("Direct SD");
-#else
-        webPrint("No SD");
-#endif
-        webPrint("  # primary sd:/sd # secondary sd:none # authentication:");
-#ifdef ENABLE_AUTHENTICATION
-        webPrint("yes");
-#else
-        webPrint("no");
-#endif
-#if defined(ENABLE_WIFI)
-#if defined(ENABLE_HTTP)
-        webPrint(" # webcommunication: Sync: ", String(web_server.port() + 1));
-        webPrint(":");
-        switch (WiFi.getMode())
-        {
-        case WIFI_MODE_AP:
-            webPrint(WiFi.softAPIP().toString());
-            break;
-        case WIFI_MODE_STA:
-            webPrint(WiFi.localIP().toString());
-            break;
-        case WIFI_MODE_APSTA:
-            webPrint(WiFi.softAPIP().toString());
-            break;
-        default:
-            webPrint("0.0.0.0");
-            break;
-        }
-#endif
-        webPrint(" # hostname:", wifi_config.Hostname());
-        if (WiFi.getMode() == WIFI_AP)
-        {
-            webPrint("(AP mode)");
-        }
-#endif
-        // to save time in decoding `?`
-        webPrintln(" # axis:", String(number_axis->get()));
-        return Error::Ok;
-    }
-
     static Error SPIFFSSize(char *parameter, AuthenticationLevel auth_level)
     { // ESP720
         webPrint(parameter);
@@ -1227,7 +1177,6 @@ namespace WebUI
         // WU - need user or admin password to set
         // WA - need admin password to set
 #ifdef WEB_COMMON
-        new WebCommand(NULL, WEBCMD, WG, "ESP800", "Firmware/Info", showFwInfo, anyState);
         new WebCommand(NULL, WEBCMD, WU, "ESP720", "LocalFS/Size", SPIFFSSize);
         new WebCommand("FORMAT", WEBCMD, WA, "ESP710", "LocalFS/Format", formatSpiffs);
         new WebCommand("path", WEBCMD, WU, "ESP701", "LocalFS/Show", showLocalFile);
