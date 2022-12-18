@@ -46,6 +46,8 @@ namespace WebUI {
         // begin_object() starts an object with {
         void begin_object();
 
+        void begin_named_object(const char* tag);
+
         // end_object() closes the object with }
         void end_object();
 

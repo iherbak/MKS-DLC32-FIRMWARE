@@ -64,7 +64,7 @@ namespace WebUI
 
 namespace WebUI
 {
-    const char SD_API_ENDPOINT[] = "/SD";
+    const char SD_API_ENDPOINT[] = "/sd";
 
     // Default 404
     const char PAGE_404[] =
@@ -640,8 +640,7 @@ namespace WebUI
 #endif
 #if defined(ENABLE_WIFI)
 #if defined(ENABLE_HTTP)
-        encoder.begin_member("Webcommunication");
-        encoder.begin_object();
+        encoder.begin_named_object("Webcommunication");
         encoder.member("Mode", "Sync");
         encoder.member("Websocket_Port", String(web_server.port() + 1));
         switch (WiFi.getMode())
