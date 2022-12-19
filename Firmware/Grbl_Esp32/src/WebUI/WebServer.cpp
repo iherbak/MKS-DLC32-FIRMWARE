@@ -61,6 +61,7 @@ namespace WebUI
 
 // embedded response file if no files on SPIFFS
 #include "NoFile.h"
+#include "../Settings.h"
 
 namespace WebUI
 {
@@ -155,6 +156,7 @@ namespace WebUI
         _webserver->on("/login", HTTP_ANY, handle_login);
         // firmware info as json
         _webserver->on("/firmware", HTTP_GET, handle_fwinfo);
+        _webserver->on("/grblsettings", HTTP_GET, handle_grbl_settings);
         // web commands
         _webserver->on("/command", HTTP_ANY, handle_web_command);
         _webserver->on("/command_silent", HTTP_ANY, handle_web_command_silent);
@@ -676,6 +678,30 @@ namespace WebUI
         _webserver->sendHeader("Cache-Control", "no-cache");
         _webserver->send(200, "application/json", encoder.end());
     }
+
+    void Web_Server::handle_grbl_settings()
+    {
+        JSONencoder encoder = new JSONencoder();
+        encoder.begin();
+        encoder.begin_array("Settings");
+        for (Setting *s = Setting::List; s; s = s->next())
+        {
+            if (s->getType() == GRBL)
+            {
+                if (s->getGrblName() != "")
+                {
+                    encoder.begin_object();
+                    encoder.member("Name", s->getGrblName());
+                    encoder.member("Value", s->getStringValue());
+                    encoder.end_object();
+                }
+            }
+        }
+        encoder.end_array();
+        _webserver->sendHeader("Cache-Control", "no-cache");
+        _webserver->send(200, "application/json", encoder.end());
+    }
+
     // login status check
     void Web_Server::handle_login()
     {
