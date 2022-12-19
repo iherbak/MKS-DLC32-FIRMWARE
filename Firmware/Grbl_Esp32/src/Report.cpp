@@ -582,7 +582,7 @@ void report_echo_line_received(char* line, uint8_t client) {
 // requires as it minimizes the computational overhead and allows grbl to keep running smoothly,
 // especially during g-code programs with fast, short line segments and high frequency reports (5-20Hz).
 void report_realtime_status(uint8_t client) {
-    char status[244];
+    char status[270];
     char temp[MAX_N_AXIS * 20];
 
     strcpy(status, "<State:");
@@ -844,7 +844,7 @@ void report_hex_msg(uint8_t* buf, const char* prefix, int len) {
 }
 
 char* report_state_text() {
-    static char state[10];
+    static char state[18];
 
     switch (sys.state) {
         case State::Idle:
@@ -855,7 +855,8 @@ char* report_state_text() {
             break;
         case State::Hold:
             if (!(sys.suspend.bit.jogCancel)) {
-                sys.suspend.bit.holdComplete ? strcpy(state, "Hold:0") : strcpy(state, "Hold:1");
+                strcpy(state, "Hold");
+                sys.suspend.bit.holdComplete ? strcat(state, "|HoldState:0") : strcat(state, "|HoldState:1");
                 break;
             }  // Continues to print jog state during jog cancel.
         case State::Jog:
