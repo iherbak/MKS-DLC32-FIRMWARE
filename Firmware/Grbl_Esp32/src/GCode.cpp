@@ -480,7 +480,6 @@ Error gc_execute_line(char* line, uint8_t client) {
                                 break;
                             case 4:  // Supported if SPINDLE_DIR_PIN is defined or laser mode is on.
                             {
-                                grbl_msg_sendf(CLIENT_SERIAL, MsgLevel::Info, spindle->inLaserMode()?"true":"false");
                                 if (spindle->is_reversable || spindle->inLaserMode()) {
                                     gc_block.modal.spindle = SpindleState::Ccw;
                                 } else {

@@ -98,7 +98,7 @@
 #endif
 
 #ifdef USE_BOARD_V2_0
-#define PROBE_PIN                   GPIO_NUM_22    
+#define PROBE_PIN                   GPIO_NUM_22
 #else
 #define PROBE_PIN                   GPIO_NUM_2    
 #endif
