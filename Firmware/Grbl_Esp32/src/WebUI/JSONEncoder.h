@@ -6,7 +6,7 @@ namespace WebUI {
     class JSONencoder {
     private:
         static const int MAX_JSON_LEVEL = 16;
-
+        
         bool   pretty;
         int    level;
         String str;
@@ -20,6 +20,7 @@ namespace WebUI {
         void   line();
 
     public:
+        static const char* status;
         // If you don't set _pretty it defaults to false
         JSONencoder();
 

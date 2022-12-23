@@ -204,86 +204,94 @@ namespace WebUI
         if (espresponse)
         {
             espresponse->print(s);
-            webColumn += strlen(s);
+            espresponse->flush();
         }
     }
-    static void webPrintSetColumn(int column)
-    {
-        while (webColumn < column)
-        {
-            webPrint(" ");
-        }
-    }
-    static void webPrint(String s) { webPrint(s.c_str()); }
-    static void webPrint(const char *s1, const char *s2)
-    {
-        webPrint(s1);
-        webPrint(s2);
-    }
-    static void webPrint(const char *s1, String s2)
-    {
-        webPrint(s1);
-        webPrint(s2.c_str());
-    }
-    static void webPrint(const char *s1, const char *s2, const char *s3)
-    {
-        webPrint(s1);
-        webPrint(s2);
-        webPrint(s3);
-    }
-    static void webPrintln(const char *s)
-    {
-        webPrint(s);
-        webPrint("\r\n");
-        webColumn = 0;
-    }
-    static void webPrintln(String s) { webPrintln(s.c_str()); }
-    static void webPrintln(const char *s1, const char *s2)
-    {
-        webPrint(s1);
-        webPrintln(s2);
-    }
-    static void webPrintln(const char *s, IPAddress ip)
-    {
-        webPrint(s);
-        webPrintln(ip.toString().c_str());
-    }
-    static void webPrintln(const char *s, String s2) { webPrintln(s, s2.c_str()); }
+    // static void webPrintSetColumn(int column)
+    // {
+    //     while (webColumn < column)
+    //     {
+    //         webPrint(" ");
+    //     }
+    // }
+    // static void webPrint(String s) { webPrint(s.c_str()); }
+    // static void webPrint(const char *s1, const char *s2)
+    // {
+    //     webPrint(s1);
+    //     webPrint(s2);
+    // }
+    // static void webPrint(const char *s1, String s2)
+    // {
+    //     webPrint(s1);
+    //     webPrint(s2.c_str());
+    // }
+    // static void webPrint(const char *s1, const char *s2, const char *s3)
+    // {
+    //     webPrint(s1);
+    //     webPrint(s2);
+    //     webPrint(s3);
+    // }
+    // static void webPrintln(const char *s)
+    // {
+    //     webPrint(s);
+    //     webPrint("\r\n");
+    //     webColumn = 0;
+    // }
+    // static void webPrintln(String s) { webPrintln(s.c_str()); }
+    // static void webPrintln(const char *s1, const char *s2)
+    // {
+    //     webPrint(s1);
+    //     webPrintln(s2);
+    // }
+    // static void webPrintln(const char *s, IPAddress ip)
+    // {
+    //     webPrint(s);
+    //     webPrintln(ip.toString().c_str());
+    // }
+    // static void webPrintln(const char *s, String s2) { webPrintln(s, s2.c_str()); }
 
-    static void print_mac(const char *s, String mac)
-    {
-        webPrint(s);
-        webPrint(" (");
-        webPrint(mac);
-        webPrintln(")");
-    }
+    // static void print_mac(const char *s, String mac)
+    // {
+    //     webPrint(s);
+    //     webPrint(" (");
+    //     webPrint(mac);
+    //     webPrintln(")");
+    // }
 
     static Error SPIFFSSize(char *parameter, AuthenticationLevel auth_level)
     { // ESP720
-        webPrint(parameter);
-        webPrint("SPIFFS  Total:", ESPResponseStream::formatBytes(SPIFFS.totalBytes()));
-        webPrintln(" Used:", ESPResponseStream::formatBytes(SPIFFS.usedBytes()));
+        JSONencoder encoder;
+        encoder.begin();
+        encoder.member("Total", ESPResponseStream::formatBytes(SPIFFS.totalBytes()));
+        encoder.member("Used", ESPResponseStream::formatBytes(SPIFFS.usedBytes()));
+        webPrint(encoder.end().c_str());
         return Error::Ok;
     }
 
     static Error formatSpiffs(char *parameter, AuthenticationLevel auth_level)
     { // ESP710
+        JSONencoder encoder;
+        encoder.begin();
         if (strcmp(parameter, "FORMAT") != 0)
         {
-            webPrintln("Parameter must be FORMAT");
+            encoder.member(JSONencoder::status, "Parameter must be FORMAT");
+            webPrint(encoder.end().c_str());
             return Error::InvalidValue;
         }
-        webPrint("Formatting");
         SPIFFS.format();
-        webPrintln("...Done");
+        encoder.member(JSONencoder::status, "Ok");
+        webPrint(encoder.end().c_str());
         return Error::Ok;
     }
 
     static Error runLocalFile(char *parameter, AuthenticationLevel auth_level)
     { // ESP700
+        JSONencoder encoder;
+        encoder.begin();
         if (sys.state != State::Idle)
         {
-            webPrintln("Busy");
+            encoder.member(JSONencoder::status, "Busy");
+            webPrint(encoder.end().c_str());
             return Error::IdleError;
         }
         String path = trim(parameter);
@@ -293,7 +301,8 @@ namespace WebUI
         }
         if (!SPIFFS.exists(path))
         {
-            webPrintln("Error: No such file!");
+            encoder.member(JSONencoder::status, "No such file!");
+            webPrint(encoder.end().c_str());
             return Error::FsFileNotFound;
         }
         File currentfile = SPIFFS.open(path, FILE_READ);
@@ -326,6 +335,8 @@ namespace WebUI
 
     static Error showLocalFile(char *parameter, AuthenticationLevel auth_level)
     { // ESP701
+        JSONencoder encoder;
+        encoder.begin();
         if (sys.state != State::Idle && sys.state != State::Alarm)
         {
             return Error::IdleError;
@@ -337,7 +348,8 @@ namespace WebUI
         }
         if (!SPIFFS.exists(path))
         {
-            webPrintln("Error: No such file!");
+            encoder.member(JSONencoder::status, "No such file!");
+            webPrint(encoder.end().c_str());
             return Error::FsFileNotFound;
         }
         File currentfile = SPIFFS.open(path, FILE_READ);
@@ -351,7 +363,9 @@ namespace WebUI
             //            if (currentline.length() > 0) {
             //                webPrintln(currentline);
             //            }
-            webPrintln(currentfile.readStringUntil('\n'));
+            encoder.member(JSONencoder::status, "Ok");
+            encoder.member("Content", currentfile.readStringUntil('\n'));
+            webPrint(encoder.end().c_str());
         }
         currentfile.close();
         return Error::Ok;
@@ -360,14 +374,19 @@ namespace WebUI
 #ifdef ENABLE_NOTIFICATIONS
     static Error showSetNotification(char *parameter, AuthenticationLevel auth_level)
     { // ESP610
+        JSONEncoder encoder;
+        encoder.begin();
         if (*parameter == '\0')
         {
-            webPrint("", notification_type->getStringValue());
-            webPrintln(" ", notification_ts->getStringValue());
+            encoder.member("Notfication_type", notification_type->getStringValue());
+            encoder.member("Notfication_TS", notification_ts->getStringValue());
+            webprint(encoder.end().c_str());
             return Error::Ok;
         }
         if (!split_params(parameter))
         {
+            encoder.member(JSONencoder::status, "Invalid value");
+            webprint(encoder.end().c_str());
             return Error::InvalidValue;
         }
         char *ts = get_param("TS", false);
@@ -387,21 +406,29 @@ namespace WebUI
         {
             err = notification_ts->setStringValue(ts);
         }
+        encoder.member(JSONencoder::status, err == Error::OK ? "Ok" : "Error during setting");
+        webprint(encoder.end().c_str());
         return err;
     }
 
     static Error sendMessage(char *parameter, AuthenticationLevel auth_level)
     { // ESP600
+        JSONencoder encoder;
+        encode.beging();
         if (*parameter == '\0')
         {
-            webPrintln("Invalid message!");
+            encoder.member(JSONencoder::status, "Invalid message!");
+            webPrint(encoder.end().c_str());
             return Error::InvalidValue;
         }
         if (!notificationsservice.sendMSG("GRBL Notification", parameter))
         {
-            webPrintln("Cannot send message!");
+            encoder.member(JSONencoder::status, "Cannot send message!");
+            webPrint(encoder.end().c_str());
             return Error::MessageFailed;
         }
+        encoder.member(JSONencoder::status, "Ok");
+        webPrint(encoder.end().c_str());
         return Error::Ok;
     }
 #endif
@@ -409,26 +436,37 @@ namespace WebUI
 #ifdef ENABLE_AUTHENTICATION
     static Error setUserPassword(char *parameter, AuthenticationLevel auth_level)
     { // ESP555
+        JSONencoder encoder;
+        encode.beging();
         if (*parameter == '\0')
         {
             user_password->setDefault();
+            encoder.member(JSONencoder::status, "Ok");
+            webPrint(encoder.end().c_str());
             return Error::Ok;
         }
         if (user_password->setStringValue(parameter) != Error::Ok)
         {
-            webPrintln("Invalid Password");
+            encoder.member(JSONencoder::status, "Invalid password");
+            webPrint(encoder.end().c_str());
             return Error::InvalidValue;
         }
+        encoder.member(JSONencoder::status, "Ok");
+        webPrint(encoder.end().c_str());
+
         return Error::Ok;
     }
 #endif
 
     static Error setSystemMode(char *parameter, AuthenticationLevel auth_level)
     { // ESP444
+        JSONencoder encoder;
+        encoder.begin();
         parameter = trim(parameter);
         if (strcasecmp(parameter, "RESTART") != 0)
         {
-            webPrintln("Incorrect command");
+            encoder.member(JSONencoder::status, "Parameter RESTART is missing");
+            webPrint(encoder.end().c_str());
             return Error::InvalidValue;
         }
         grbl_send(CLIENT_ALL, "[MSG:Restart ongoing]\r\n");
@@ -438,18 +476,20 @@ namespace WebUI
 
     static Error showSysStats(char *parameter, AuthenticationLevel auth_level)
     { // ESP420
-        webPrintln("Chip ID: ", String((uint16_t)(ESP.getEfuseMac() >> 32)));
-        webPrintln("CPU Frequency: ", String(ESP.getCpuFreqMHz()) + "Mhz");
-        webPrintln("CPU Temperature: ", String(temperatureRead(), 1) + "C");
-        webPrintln("Free memory: ", ESPResponseStream::formatBytes(ESP.getFreeHeap()));
-        webPrintln("SDK: ", ESP.getSdkVersion());
-        webPrintln("Board Version: ", "DLC32 V003"); // mks fix
-        webPrintln("Firmware: ", "DLC32 V1.10C");    // mks fix
-        webPrintln("Flash Size: ", ESPResponseStream::formatBytes(ESP.getFlashChipSize()));
+        JSONencoder encoder;
+        encoder.begin();
+        encoder.member("Chip_ID", String((uint16_t)(ESP.getEfuseMac() >> 32)));
+        encoder.member("CPU_Frequency", String(ESP.getCpuFreqMHz()) + "Mhz");
+        encoder.member("CPU_Temperature", String(temperatureRead(), 1) + "C");
+        encoder.member("Free_memory", ESPResponseStream::formatBytes(ESP.getFreeHeap()));
+        encoder.member("SDK", ESP.getSdkVersion());
+        encoder.member("Board_Version", "DLC32 V003"); // mks fix
+        encoder.member("Firmware", "DLC32 V1.10C");    // mks fix
+        encoder.member("Flash_Size", ESPResponseStream::formatBytes(ESP.getFlashChipSize()));
 
         // Round baudRate to nearest 100 because ESP32 can say e.g. 115201
-        webPrintln("Baud rate: ", String((Serial.baudRate() / 100) * 100));
-        webPrintln("Sleep mode: ", WiFi.getSleep() ? "Modem" : "None");
+        encoder.member("Baud_rate", String((Serial.baudRate() / 100) * 100));
+        encoder.member("Sleep_mode", WiFi.getSleep() ? "Modem" : "None");
 
 #ifdef ENABLE_WIFI
         int mode = WiFi.getMode();
@@ -465,29 +505,30 @@ namespace WebUI
                     flashsize = partition->size;
                 }
             }
-            webPrintln("Available Size for update: ", ESPResponseStream::formatBytes(flashsize));
-            webPrintln("Available Size for SPIFFS: ", ESPResponseStream::formatBytes(SPIFFS.totalBytes()));
-
+            encoder.begin_named_object("Capacities");
+            encoder.member("Flash", ESPResponseStream::formatBytes(flashsize));
+            encoder.member("SPIFFS", ESPResponseStream::formatBytes(SPIFFS.totalBytes()));
+            encoder.end_object();
+            encoder.begin_named_object("Network");
 #if defined(ENABLE_HTTP)
-            webPrintln("Web port: ", String(web_server.port()));
+            encoder.member("Web_port", String(web_server.port()));
 #endif
 #if defined(ENABLE_TELNET)
-            webPrintln("Data port: ", String(telnet_server.port()));
+            encoder.member("Data_port", String(telnet_server.port()));
 #endif
-            webPrintln("Hostname: ", wifi_config.Hostname());
+            encoder.member("Hostname", wifi_config.Hostname());
         }
-
-        webPrint("Current WiFi Mode: ");
         switch (mode)
         {
         case WIFI_STA:
-            print_mac("STA", WiFi.macAddress());
+            encoder.member("Wifi_Mode", "STA");
+            encoder.member("MAC", WiFi.macAddress());
 
-            webPrint("Connected to: ");
             if (WiFi.isConnected())
             { // in theory no need but ...
-                webPrintln(WiFi.SSID());
-                webPrintln("Signal: ", String(wifi_config.getSignal(WiFi.RSSI())) + "%");
+                encoder.member("Connected", WiFi.SSID());
+
+                encoder.member("Signal", String(wifi_config.getSignal(WiFi.RSSI())) + "%");
 
                 uint8_t PhyMode;
                 esp_wifi_get_protocol(WIFI_IF_STA, &PhyMode);
@@ -506,29 +547,29 @@ namespace WebUI
                 default:
                     modeName = "???";
                 }
-                webPrintln("Phy Mode: ", modeName);
+                encoder.member("Phy_Mode", modeName);
 
-                webPrintln("Channel: ", String(WiFi.channel()));
+                encoder.member("Channel", String(WiFi.channel()));
 
                 tcpip_adapter_dhcp_status_t dhcp_status;
                 tcpip_adapter_dhcpc_get_status(TCPIP_ADAPTER_IF_STA, &dhcp_status);
-                webPrintln("IP Mode: ", dhcp_status == TCPIP_ADAPTER_DHCP_STARTED ? "DHCP" : "Static");
-                webPrintln("IP: ", WiFi.localIP());
-                webPrintln("Gateway: ", WiFi.gatewayIP());
-                webPrintln("Mask: ", WiFi.subnetMask());
-                webPrintln("DNS: ", WiFi.dnsIP());
+                encoder.member("IP_Mode", dhcp_status == TCPIP_ADAPTER_DHCP_STARTED ? "DHCP" : "Static");
+                encoder.member("IP", WiFi.localIP());
+                encoder.member("Gateway", WiFi.gatewayIP());
+                encoder.member("Mask", WiFi.subnetMask());
+                encoder.member("DNS", WiFi.dnsIP());
 
             } // this is web command so connection => no command
-            webPrint("Disabled Mode: ");
-            print_mac("AP", WiFi.softAPmacAddress());
+            encoder.member("Soft_MAC", WiFi.softAPmacAddress());
             break;
         case WIFI_AP:
-            print_mac("AP", WiFi.softAPmacAddress());
+            encoder.member("Wifi_Mode", "AP");
+            encoder.member("MAC", WiFi.softAPmacAddress());
 
             wifi_config_t conf;
             esp_wifi_get_config(WIFI_IF_AP, &conf);
-            webPrintln("SSID: ", (const char *)conf.ap.ssid);
-            webPrintln("Visible: ", (conf.ap.ssid_hidden == 0) ? "Yes" : "No");
+            encoder.member("SSID", (const char *)conf.ap.ssid);
+            encoder.member("Visible", (conf.ap.ssid_hidden == 0) ? "Yes" : "No");
 
             const char *mode;
             switch (conf.ap.authmode)
@@ -549,89 +590,78 @@ namespace WebUI
                 mode = "WPA/WPA2";
             }
 
-            webPrintln("Authentication: ", mode);
-            webPrintln("Max Connections: ", String(conf.ap.max_connection));
+            encoder.member("Authentication", mode);
+            encoder.member("Max_Connections", String(conf.ap.max_connection));
 
             tcpip_adapter_dhcp_status_t dhcp_status;
             tcpip_adapter_dhcps_get_status(TCPIP_ADAPTER_IF_AP, &dhcp_status);
-            webPrintln("DHCP Server: ", dhcp_status == TCPIP_ADAPTER_DHCP_STARTED ? "Started" : "Stopped");
+            encoder.member("DHCP_Server", dhcp_status == TCPIP_ADAPTER_DHCP_STARTED ? "Started" : "Stopped");
 
-            webPrintln("IP: ", WiFi.softAPIP());
+            encoder.member("IP", WiFi.softAPIP());
 
             tcpip_adapter_ip_info_t ip_AP;
             tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_AP, &ip_AP);
-            webPrintln("Gateway: ", IPAddress(ip_AP.gw.addr));
-            webPrintln("Mask: ", IPAddress(ip_AP.netmask.addr));
+            encoder.member("Gateway", IPAddress(ip_AP.gw.addr));
+            encoder.member("Mask", IPAddress(ip_AP.netmask.addr));
 
             wifi_sta_list_t station;
             tcpip_adapter_sta_list_t tcpip_sta_list;
             esp_wifi_ap_get_sta_list(&station);
             tcpip_adapter_get_sta_list(&station, &tcpip_sta_list);
-            webPrintln("Connected clients: ", String(station.num));
-
+            encoder.begin_named_object("Connected_Clients");
+            encoder.member("Count", String(station.num));
+            encoder.begin_array("Clients_detail");
             for (int i = 0; i < station.num; i++)
             {
-                webPrint(wifi_config.mac2str(tcpip_sta_list.sta[i].mac));
-                webPrintln(" ", IPAddress(tcpip_sta_list.sta[i].ip.addr));
+                encoder.begin_object();
+                encoder.member("Client_" + i, wifi_config.mac2str(tcpip_sta_list.sta[i].mac));
+                encoder.member("Client_IP_" + i, IPAddress(tcpip_sta_list.sta[i].ip.addr));
+                encoder.end_object();
             }
-            webPrint("Disabled Mode: ");
-            print_mac("STA", WiFi.macAddress());
+            encoder.end_array();
+            encoder.end_object();
+            encoder.member("Disabled Mode", "STA (" + WiFi.macAddress() + ")");
             break;
         case WIFI_AP_STA: // we should not be in this state but just in case ....
-            webPrintln("Mixed");
-
-            print_mac("STA", WiFi.macAddress());
-            print_mac("AP", WiFi.softAPmacAddress());
+            encoder.member("Mixed", "STA (" + WiFi.macAddress() + ") " + "AP (" + WiFi.softAPmacAddress() + ")");
             break;
         default: // we should not be there if no wifi ....
-            webPrintln("Off");
+            encoder.member("Off", "");
             break;
         }
 #endif // ENABLE_WIFI
 #ifdef ENABLE_BLUETOOTH
-        webPrint("Current BT Mode: ");
         if (bt_config.Is_BT_on())
         {
-            webPrintln("On");
+            encoder.member("BT mode", "On");
 
-            webPrint("BT Name: ");
-            webPrint(bt_config.BTname());
-            webPrint("(");
-            webPrint(bt_config.device_address());
-            webPrintln(")");
-
-            webPrint("Status: ");
+            encoder.member("BT_Name", bt_config.BTname());
+            encoder.member("BT_Address", bt_config.device_address());
             if (SerialBT.hasClient())
             {
-                webPrintln("Connected with ", bt_config._btclient);
+                encoder.member("Connected", bt_config._btclient);
             }
             else
             {
-                webPrintln("Not connected");
+                encoder.member("Connected", "no");
             }
         }
         else
         {
-            webPrintln("Off");
+            encoder.member("BT mode", "Off");
         }
 #endif
 #ifdef ENABLE_NOTIFICATIONS
-        webPrint("Notifications: ");
-        webPrint(notificationsservice.started() ? "Enabled" : "Disabled");
+        encoder.member("Notifications", notificationsservice.started() ? "Enabled" : "Disabled");
         if (notificationsservice.started())
         {
-            webPrint("(");
-            webPrint(notificationsservice.getTypeString());
-            webPrint(")");
+            encoder.member("Notification_service", notificationsservice.getTypeString());
         }
-        webPrintln("");
 #endif
-        webPrint("FW version: ");
-        webPrint(GRBL_VERSION);
-        webPrint(" (");
-        webPrint(GRBL_VERSION_BUILD);
-        webPrint(") (ESP32)");
-        webPrintln("");
+        encoder.end_object();
+        encoder.member("FW_version", GRBL_VERSION);
+        encoder.member("Build_Number", GRBL_VERSION_BUILD);
+        webPrint(encoder.end().c_str());
         return Error::Ok;
     }
 
@@ -672,7 +702,7 @@ namespace WebUI
             break;
         }
         j.end_array();
-        webPrint(j.end());
+        webPrint(j.end().c_str());
         if (espresponse->client() != CLIENT_WEBUI)
         {
             espresponse->println("");
@@ -685,15 +715,20 @@ namespace WebUI
     { // ESP401
         // We do not need the "T=" (type) parameter because the
         // Setting objects know their own type
+        JSONencoder encoder;
+        encoder.begin();
         if (!split_params(parameter))
         {
+            encoder.member(JSONencoder::status, "Invalid value");
+            webPrint(encoder.end().c_str());
             return Error::InvalidValue;
         }
         char *sval = get_param("V", true);
         const char *spos = get_param("P", false);
         if (*spos == '\0')
         {
-            webPrintln("Missing parameter");
+            encoder.member(JSONencoder::status, "Missing parameter");
+            webPrint(encoder.end().c_str());
             return Error::InvalidValue;
         }
         Error ret = do_command_or_setting(spos, sval, auth_level, espresponse);
@@ -713,16 +748,19 @@ namespace WebUI
             }
         }
         j.end_array();
-        webPrint(j.end());
+        webPrint(j.end().c_str());
         return Error::Ok;
     }
 
 #ifdef ENABLE_SD_CARD
     static Error openSDFile(char *parameter)
     {
+        JSONencoder encoder;
+        encoder.begin();
         if (*parameter == '\0')
         {
-            webPrintln("Missing file name!");
+            encoder.member(JSONencoder::status, "Missing file name!");
+            webPrint(encoder.end().c_str());
             return Error::InvalidValue;
         }
         String path = trim(parameter);
@@ -735,23 +773,30 @@ namespace WebUI
         {
             if (state == SDState::NotPresent)
             {
-                webPrintln("No SD Card");
+                encoder.member(JSONencoder::status, "No SD Card");
+                webPrint(encoder.end().c_str());
                 return Error::FsFailedMount;
             }
             else
             {
-                webPrintln("SD Card Busy");
+                encoder.member(JSONencoder::status, "SD Card Busy");
+                webPrint(encoder.end().c_str());
                 return Error::FsFailedBusy;
             }
         }
         if (!openFile(SD, path.c_str()))
         {
             report_status_message(Error::FsFailedRead, (espresponse) ? espresponse->client() : CLIENT_ALL);
-            webPrintln("");
+            encoder.member(JSONencoder::status, "Opening file failed!");
+            webPrint(encoder.end().c_str());
             return Error::FsFailedOpenFile;
         }
+        encoder.member(JSONencoder::status, "Ok");
+        webPrint(encoder.end().c_str());
+
         return Error::Ok;
     }
+
     static Error showSDFile(char *parameter, AuthenticationLevel auth_level)
     { // ESP221
         if (sys.state != State::Idle && sys.state != State::Alarm)
@@ -763,28 +808,38 @@ namespace WebUI
         {
             return err;
         }
+        JSONencoder encoder;
+        encoder.begin();
+
         SD_client = (espresponse) ? espresponse->client() : CLIENT_ALL;
         char fileLine[255];
+        String file;
         while (readFileLine(fileLine, 255))
         {
-            webPrintln(fileLine);
+            file += fileLine;
         }
-        webPrintln("");
         closeFile();
+        encoder.member(JSONencoder::status, "Ok");
+        encoder.member("FileContent", file);
+        webPrint(encoder.end().c_str());
         return Error::Ok;
     }
 
     static Error runSDFile(char *parameter, AuthenticationLevel auth_level)
     { // ESP220
         Error err;
+        JSONencoder encoder;
+        encoder.begin();
         if (sys.state == State::Alarm)
         {
-            webPrintln("Alarm");
+            encoder.member(JSONencoder::status, "Alarm");
+            webPrint(encoder.end().c_str());
             return Error::IdleError;
         }
         if (sys.state != State::Idle)
         {
-            webPrintln("Busy");
+            encoder.member(JSONencoder::status, "Busy");
+            webPrint(encoder.end().c_str());
             return Error::IdleError;
         }
         if ((err = openSDFile(parameter)) != Error::Ok)
@@ -796,7 +851,8 @@ namespace WebUI
         {
             // No need notification here it is just a macro
             closeFile();
-            webPrintln("");
+            encoder.member(JSONencoder::status, "Ok");
+            webPrint(encoder.end().c_str());
             return Error::Ok;
         }
         SD_client = (espresponse) ? espresponse->client() : CLIENT_ALL;
@@ -804,22 +860,25 @@ namespace WebUI
         // execute the first line now; Protocol.cpp handles later ones when SD_ready_next
         report_status_message(execute_line(fileLine, SD_client, SD_auth_level), SD_client);
         report_realtime_status(SD_client);
-        webPrintln("");
         return Error::Ok;
     }
 
     static Error deleteSDObject(char *parameter, AuthenticationLevel auth_level)
     { // ESP215
+        JSONencoder encoder;
+        encoder.begin();
         parameter = trim(parameter);
         if (*parameter == '\0')
         {
-            webPrintln("Missing file name!");
+            encoder.member(JSONencoder::status, "Missing file name!");
+            webPrint(encoder.end().c_str());
             return Error::InvalidValue;
         }
         SDState state = get_sd_state(true);
         if (state != SDState::Idle)
         {
-            webPrintln((state == SDState::NotPresent) ? "No SD card" : "Busy");
+            encoder.member(JSONencoder::status, (state == SDState::NotPresent) ? "No SD card" : "Busy");
+            webPrint(encoder.end().c_str());
             return Error::Ok;
         }
         String path = parameter;
@@ -830,26 +889,32 @@ namespace WebUI
         File file2del = SD.open(path);
         if (!file2del)
         {
-            webPrintln("Cannot stat file!");
+            encoder.member(JSONencoder::status, "Cannot start file!");
+            webPrint(encoder.end().c_str());
             return Error::FsFileNotFound;
         }
         if (file2del.isDirectory())
         {
             if (!SD.rmdir(path))
             {
-                webPrintln("Cannot delete directory! Is directory empty?");
+                encoder.member(JSONencoder::status, "Cannot delete directory! Is directory empty?");
+                webPrint(encoder.end().c_str());
                 return Error::FsFailedDelDir;
             }
-            webPrintln("Directory deleted.");
+            encoder.member(JSONencoder::status, "Directory deleted.");
+            webPrint(encoder.end().c_str());
         }
         else
         {
             if (!SD.remove(path))
             {
-                webPrintln("Cannot delete file!");
+
+                encoder.member(JSONencoder::status, "Cannot delete file!");
+                webPrint(encoder.end().c_str());
                 return Error::FsFailedDelFile;
             }
-            webPrintln("File deleted.");
+            encoder.member(JSONencoder::status, "File deleted.");
+            webPrint(encoder.end().c_str());
         }
         file2del.close();
         return Error::Ok;
@@ -858,28 +923,29 @@ namespace WebUI
     static Error listSDFiles(char *parameter, AuthenticationLevel auth_level)
     { // ESP210
         SDState state = get_sd_state(true);
-
+        JSONencoder encoder;
+        encoder.begin();
         if (state != SDState::Idle)
         {
             if (state == SDState::NotPresent)
             {
-                webPrintln("No SD Card");
+                encoder.member(JSONencoder::status, "No SD Card");
+                webPrint(encoder.end().c_str());
                 return Error::FsFailedMount;
             }
             else
             {
-                webPrintln("SD Card Busy");
+                encoder.member(JSONencoder::status, "SD Card Busy");
+                webPrint(encoder.end().c_str());
                 return Error::FsFailedBusy;
             }
         }
 
-        webPrintln("");
         listDir(SD, "/", 10, espresponse->client());
-        String ssd = "[SD Free:" + ESPResponseStream::formatBytes(SD.totalBytes() - SD.usedBytes());
-        ssd += " Used:" + ESPResponseStream::formatBytes(SD.usedBytes());
-        ssd += " Total:" + ESPResponseStream::formatBytes(SD.totalBytes());
-        ssd += "]";
-        webPrintln(ssd);
+        encoder.member("Free", ESPResponseStream::formatBytes(SD.totalBytes() - SD.usedBytes()));
+        encoder.member("Used", ESPResponseStream::formatBytes(SD.usedBytes()));
+        encoder.member("Total", ESPResponseStream::formatBytes(SD.totalBytes()));
+        webPrint(encoder.end().c_str());
         SD.end();
         return Error::Ok;
     }
@@ -919,18 +985,6 @@ namespace WebUI
         }
     }
 
-    static Error listLocalFiles(char *parameter, AuthenticationLevel auth_level)
-    { // No ESP command
-        webPrintln("");
-        listDirLocalFS(SPIFFS, "/", 10, espresponse->client());
-        String ssd = "[Local FS Free:" + ESPResponseStream::formatBytes(SPIFFS.totalBytes() - SPIFFS.usedBytes());
-        ssd += " Used:" + ESPResponseStream::formatBytes(SPIFFS.usedBytes());
-        ssd += " Total:" + ESPResponseStream::formatBytes(SPIFFS.totalBytes());
-        ssd += "]";
-        webPrintln(ssd);
-        return Error::Ok;
-    }
-
     static void listDirJSON(fs::FS &fs, const char *dirname, uint8_t levels, JSONencoder *j)
     {
         File root = fs.open(dirname);
@@ -966,11 +1020,7 @@ namespace WebUI
         j.member("total", SPIFFS.totalBytes());
         j.member("used", SPIFFS.usedBytes());
         j.member("occupation", String(100 * SPIFFS.usedBytes() / SPIFFS.totalBytes()));
-        webPrint(j.end());
-        if (espresponse->client() != CLIENT_WEBUI)
-        {
-            webPrintln("");
-        }
+        webPrint(j.end().c_str());
         return Error::Ok;
     }
 
@@ -992,12 +1042,17 @@ namespace WebUI
 #else
         resp = "SD card not enabled";
 #endif
-        webPrintln(resp);
+        JSONencoder encoder;
+        encoder.begin();
+        encoder.member(JSONencoder::status, resp);
+        webPrint(encoder.end().c_str());
         return Error::Ok;
     }
 
     static Error setRadioState(char *parameter, AuthenticationLevel auth_level)
     { // ESP115
+        JSONencoder encoder;
+        encoder.begin();
         parameter = trim(parameter);
         if (*parameter == '\0')
         {
@@ -1015,7 +1070,9 @@ namespace WebUI
                 on = true;
             }
 #endif
-            webPrintln(on ? "ON" : "OFF");
+
+            encoder.member(JSONencoder::status, on ? "ON" : "OFF");
+            webPrint(encoder.end().c_str());
             return Error::Ok;
         }
         int8_t on = -1;
@@ -1029,7 +1086,8 @@ namespace WebUI
         }
         if (on == -1)
         {
-            webPrintln("only ON or OFF mode supported!");
+            encoder.member(JSONencoder::status, "only ON or OFF mode supported!");
+            webPrint(encoder.end().c_str());
             return Error::InvalidValue;
         }
 
@@ -1049,7 +1107,8 @@ namespace WebUI
         // if On start proper service
         if (!on)
         {
-            webPrintln("[MSG: Radio is Off]");
+            encoder.member(JSONencoder::status, "Radio is OFF");
+            webPrint(encoder.end().c_str());
             return Error::Ok;
         }
         // On
@@ -1059,47 +1118,64 @@ namespace WebUI
         case ESP_WIFI_AP:
         case ESP_WIFI_STA:
 #if !defined(ENABLE_WIFI)
-            webPrintln("WiFi is not enabled!");
+            encoder.member(JSONencoder::status, "Wifi is not enabled");
+            webPrint(encoder.end().c_str());
             return Error::WifiFailBegin;
 
 #else
             wifi_config.begin();
+            encoder.member(JSONencoder::status, "Ok");
+            webPrint(encoder.end().c_str());
             return Error::Ok;
 #endif
         case ESP_BT:
 #if !defined(ENABLE_BLUETOOTH)
-            webPrintln("Bluetooth is not enabled!");
+            encoder.member(JSONencoder::status, "Bluetooth is not enabled");
+            webPrint(encoder.end().c_str());
             return Error::BtFailBegin;
 #else
             bt_config.begin();
+            encoder.member(JSONencoder::status, "Ok");
+            webPrint(encoder.end().c_str());
             return Error::Ok;
 #endif
         default:
-            webPrintln("[MSG: Radio is Off]");
+            encoder.member(JSONencoder::status, "Radio is Off");
+            webPrint(encoder.end().c_str());
             return Error::Ok;
         }
 #endif
+        encoder.member(JSONencoder::status, "Ok");
+        webPrint(encoder.end().c_str());
         return Error::Ok;
     }
 
 #ifdef ENABLE_WIFI
     static Error showIP(char *parameter, AuthenticationLevel auth_level)
     { // ESP111
-        webPrintln(parameter, WiFi.getMode() == WIFI_STA ? WiFi.localIP() : WiFi.softAPIP());
+        JSONencoder encoder;
+        encoder.begin();
+        encoder.member(parameter, WiFi.getMode() == WIFI_STA ? WiFi.localIP() : WiFi.softAPIP());
+        webPrint(encoder.end().c_str());
         return Error::Ok;
     }
 
     static Error showSetStaParams(char *parameter, AuthenticationLevel auth_level)
     { // ESP103
+        JSONencoder encoder;
+        encoder.begin();
         if (*parameter == '\0')
         {
-            webPrint("IP:", wifi_sta_ip->getStringValue());
-            webPrint(" GW:", wifi_sta_gateway->getStringValue());
-            webPrintln(" MSK:", wifi_sta_netmask->getStringValue());
+            encoder.member("IP", wifi_sta_ip->getStringValue());
+            encoder.member("GW", wifi_sta_gateway->getStringValue());
+            encoder.member("MSK", wifi_sta_netmask->getStringValue());
+            webPrint(encoder.end().c_str());
             return Error::Ok;
         }
         if (!split_params(parameter))
         {
+            encoder.member(JSONencoder::status, "Invalid value");
+            webPrint(encoder.end().c_str());
             return Error::InvalidValue;
         }
         char *gateway = get_param("GW", false);
@@ -1115,54 +1191,51 @@ namespace WebUI
         {
             err = wifi_sta_gateway->setStringValue(gateway);
         }
+        encoder.member(JSONencoder::status, err == Error::Ok ? "Ok" : "Error during setting up");
+        webPrint(encoder.end().c_str());
         return err;
     }
 #endif
 
     static Error showWebHelp(char *parameter, AuthenticationLevel auth_level)
     { // ESP0
-        webPrintln("Persistent web settings - $name to show, $name=value to set");
-        webPrintln("ESPname FullName         Description");
-        webPrintln("------- --------         -----------");
+        JSONencoder encoder;
+        encoder.begin();
+        encoder.begin_array("Persisitent_ESPSettings");
+        //        webPrintln("Persistent web settings - $name to show, $name=value to set");
+        //      webPrintln("ESPname FullName         Description");
+        //    webPrintln("------- --------         -----------");
         for (Setting *s = Setting::List; s; s = s->next())
         {
             if (s->getType() == WEBSET)
             {
+                encoder.begin_object();
                 if (s->getGrblName())
                 {
-                    webPrint(" ", s->getGrblName());
+                    encoder.member("Grblname", s->getGrblName());
                 }
-                webPrintSetColumn(8);
-                webPrint(s->getName());
-                webPrintSetColumn(25);
-                webPrintln(s->getDescription());
+                encoder.member("Name", s->getName());
+                encoder.member("Description", s->getDescription());
+                encoder.end_object();
             }
         }
-        webPrintln("");
-        webPrintln("Other web commands: $name to show, $name=value to set");
-        webPrintln("ESPname FullName         Values");
-        webPrintln("------- --------         ------");
+        encoder.end_array();
+        encoder.begin_array("Other_Commands");
+        //        webPrintln("Other web commands: $name to show, $name=value to set");
+        //      webPrintln("ESPname FullName         Values");
+        //    webPrintln("------- --------         ------");
         for (Command *cp = Command::List; cp; cp = cp->next())
         {
             if (cp->getType() == WEBCMD)
             {
-                if (cp->getGrblName())
-                {
-                    webPrint(" ", cp->getGrblName());
-                }
-                webPrintSetColumn(8);
-                webPrint(cp->getName());
-                if (cp->getDescription())
-                {
-                    webPrintSetColumn(25);
-                    webPrintln(cp->getDescription());
-                }
-                else
-                {
-                    webPrintln("");
-                }
+                encoder.begin_object();
+                encoder.member("Grblname", cp->getGrblName());
+                encoder.member("Name", cp->getName());
+                encoder.member("Description", cp->getDescription());
             }
         }
+        encoder.end_array();
+        webPrint(encoder.end().c_str());
         return Error::Ok;
     }
 
@@ -1181,7 +1254,6 @@ namespace WebUI
         new WebCommand("FORMAT", WEBCMD, WA, "ESP710", "LocalFS/Format", formatSpiffs);
         new WebCommand("path", WEBCMD, WU, "ESP701", "LocalFS/Show", showLocalFile);
         new WebCommand("path", WEBCMD, WU, "ESP700", "LocalFS/Run", runLocalFile);
-        new WebCommand("path", WEBCMD, WU, NULL, "LocalFS/List", listLocalFiles);
         new WebCommand("path", WEBCMD, WU, NULL, "LocalFS/ListJSON", listLocalFilesJSON);
 #endif
 #ifdef ENABLE_NOTIFICATIONS
