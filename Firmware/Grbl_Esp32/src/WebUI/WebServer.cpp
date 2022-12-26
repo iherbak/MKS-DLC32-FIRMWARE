@@ -721,9 +721,9 @@ namespace WebUI
         encoder.begin_array("Settings");
         for (Setting *s = Setting::List; s; s = s->next())
         {
-            if (s->getType() == GRBL)
+            if (s->getType() == GRBL && s->getGrblName())
             {
-                if (s->getGrblName() != "")
+                if (s->getAxis() != NO_AXIS)
                 {
                     encoder.begin_object();
                     encoder.member("Name", s->getGrblName());
@@ -733,8 +733,11 @@ namespace WebUI
             }
         }
         encoder.end_array();
+        auto settings = encoder.end();
+        grbl_msg_sendf(CLIENT_ALL, MsgLevel::Info, settings.c_str());
+
         _webserver->sendHeader("Cache-Control", "no-cache");
-        _webserver->send(200, "application/json", encoder.end());
+        _webserver->send(200, "application/json", settings.c_str());
     }
 
     // login status check
