@@ -679,6 +679,7 @@ namespace WebUI
         encoder.begin_named_object("Webcommunication");
         encoder.member("Mode", "Sync");
         encoder.member("Websocket_Port", String(web_server.port() + 1));
+        encoder.member("Telnet_Port", String(8080));
         switch (WiFi.getMode())
         {
         case WIFI_MODE_AP:

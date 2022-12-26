@@ -1155,7 +1155,7 @@ namespace WebUI
     { // ESP111
         JSONencoder encoder;
         encoder.begin();
-        encoder.member(parameter, WiFi.getMode() == WIFI_STA ? WiFi.localIP() : WiFi.softAPIP());
+        encoder.member("IP", WiFi.getMode() == WIFI_STA ? WiFi.localIP().toString() : WiFi.softAPIP().toString());
         webPrint(encoder.end().c_str());
         return Error::Ok;
     }
@@ -1232,6 +1232,7 @@ namespace WebUI
                 encoder.member("Grblname", cp->getGrblName());
                 encoder.member("Name", cp->getName());
                 encoder.member("Description", cp->getDescription());
+                encoder.end_object();
             }
         }
         encoder.end_array();
