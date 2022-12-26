@@ -723,13 +723,10 @@ namespace WebUI
         {
             if (s->getType() == GRBL && s->getGrblName())
             {
-                if (s->getAxis() != NO_AXIS)
-                {
-                    encoder.begin_object();
-                    encoder.member("Name", s->getGrblName());
-                    encoder.member("Value", s->getStringValue());
-                    encoder.end_object();
-                }
+                encoder.begin_object();
+                encoder.member("Name", s->getGrblName());
+                encoder.member("Value", s->getStringValue());
+                encoder.end_object();
             }
         }
         encoder.end_array();
