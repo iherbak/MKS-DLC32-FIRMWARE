@@ -733,11 +733,8 @@ namespace WebUI
             }
         }
         encoder.end_array();
-        auto settings = encoder.end();
-        grbl_msg_sendf(CLIENT_ALL, MsgLevel::Info, settings.c_str());
-
         _webserver->sendHeader("Cache-Control", "no-cache");
-        _webserver->send(200, "application/json", settings.c_str());
+        _webserver->send(200, "application/json", encoder.end().c_str());
     }
 
     // login status check
