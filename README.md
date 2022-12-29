@@ -2,6 +2,8 @@
 - Modified source code for my UI https://github.com/iherbak/DLC32-Angular
 - Other UI-s are not compatible with this firmware because of changes see below
 
+### Only supporting and tested with a Normal (non-CoreXY) Laser engraver with only X and Y axis ( TwoTrees TT-5.5S) 
+
 ## Environment construction:
 
 - vscode
@@ -15,7 +17,6 @@ Open Firmware with vscode, and platformIO will be started, In the platform.ini f
 Change -DMACHINE_FILENAME to your desired version
 
 Then compile and upload.
-
 
 ## Changes
 - No [ESP800] use /firmware endpoint instead for a nice parsable json instead
