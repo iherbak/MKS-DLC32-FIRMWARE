@@ -19,4 +19,13 @@ Then compile and upload.
 
 ## Changes
 - No [ESP800] use /firmware endpoint instead for a nice parsable json instead
-- Websocket status messages now start like "<State:" so better for parsing
+- more json format as answer to be more consistent
+- /grblsettings endpoint to get grbl settings as a json instead of relying on websocket answer
+- /espcommand endpoint to handle esp commands
+- /command only handles non-esp commands, like grbl and gcode comamnds
+- both /command and /espcommand looks for cmd query param (no more commandText or plain)
+
+- Websocket status messages
+	- are starting like "<State:" so better for parsing
+	- Hold message now adds HoldState (<State:Hold|HoldState:0...) to be able to parse it nicely
+
