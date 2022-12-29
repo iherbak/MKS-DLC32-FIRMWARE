@@ -29,16 +29,13 @@ namespace WebUI {
     public:
 #if defined(ENABLE_HTTP) && defined(ENABLE_WIFI)
         WebServer* _webserver;
-        String     _buffer;
         ESPResponseStream(WebServer* webserver);
         WebServer* webserver() { return _webserver;}
 #endif
         ESPResponseStream(uint8_t client, bool byid = true);
         ESPResponseStream();
 
-        void          print(const char* data);
-        void          println(const char* data);
-        void          flush();
+        void          sendJson(const char* data);
         bool          anyOutput() { return _header_sent; }
         static String formatBytes(uint64_t bytes);
         uint8_t       client() { return _client; }

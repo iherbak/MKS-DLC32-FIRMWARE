@@ -314,7 +314,7 @@ namespace WebUI
                 encoder.begin();
                 encoder.member(JSONencoder::status, "cannot open: " + path + ", SD is not available.");
                 _webserver->sendHeader("Cache-Control", "no-cache");
-                _webserver->send(500, "application/json", encoder.end());
+                _webserver->send(404, "application/json", encoder.end());
             }
             if (SD.exists(pathWithGz) || SD.exists(path))
             {
@@ -362,12 +362,15 @@ namespace WebUI
                 }
                 set_sd_state(SDState::Idle);
             }
-            JSONencoder encoder;
-            encoder.begin();
-            encoder.member(JSONencoder::status, "Can not find " + path);
-            _webserver->sendHeader("Cache-Control", "no-cache");
-            _webserver->send(404, "application/json", encoder.end());
-            return;
+            else
+            {
+                JSONencoder encoder;
+                encoder.begin();
+                encoder.member(JSONencoder::status, "Can not find " + path);
+                _webserver->sendHeader("Cache-Control", "no-cache");
+                _webserver->send(404, "application/json", encoder.end());
+                return;
+            }
         }
         else
 #endif
@@ -522,7 +525,7 @@ namespace WebUI
             encoder.begin();
             encoder.member(JSONencoder::status, "Missing command query parameter");
             _webserver->sendHeader("Cache-Control", "no-cache");
-            _webserver->send(200, "application/json", encoder.end());
+            _webserver->send(400, "application/json", encoder.end());
             return;
         }
         // if it is internal command [ESPXXX]<parameter>
@@ -534,7 +537,7 @@ namespace WebUI
             encoder.begin();
             encoder.member(JSONencoder::status, "Error ESP command should go to /espcommand");
             _webserver->sendHeader("Cache-Control", "no-cache");
-            _webserver->send(200, "application/json", encoder.end());
+            _webserver->send(400, "application/json", encoder.end());
         }
         else
         { // execute GCODE
@@ -581,9 +584,9 @@ namespace WebUI
             }
             JSONencoder encoder;
             encoder.begin();
-            encoder.member(JSONencoder::status, hasError ? "Error" : "OK");
+            encoder.member(JSONencoder::status, hasError ? "Error" : JSONencoder::ok);
             _webserver->sendHeader("Cache-Control", "no-cache");
-            _webserver->send(200, "application/json", encoder.end());
+            _webserver->send(hasError ? 400 : 200, "application/json", encoder.end());
         }
     }
 
@@ -601,7 +604,7 @@ namespace WebUI
             encoder.begin();
             encoder.member(JSONencoder::status, "Missing command query parameter");
             _webserver->sendHeader("Cache-Control", "no-cache");
-            _webserver->send(200, "application/json", encoder.end());
+            _webserver->send(400, "application/json", encoder.end());
             return;
         }
         // if it is internal command [ESPXXX]<parameter>
@@ -617,7 +620,7 @@ namespace WebUI
             String answer;
             if (err == Error::Ok)
             {
-                answer = "ok";
+                answer = JSONencoder::ok;
             }
             else
             {
@@ -638,7 +641,7 @@ namespace WebUI
                 encoder.begin();
                 encoder.member(JSONencoder::status, answer);
                 _webserver->sendHeader("Cache-Control", "no-cache");
-                _webserver->send(err != Error::Ok ? 500 : 200, "application/json", encoder.end());
+                _webserver->send(err != Error::Ok ? 400 : 200, "application/json", encoder.end());
             }
             delete (espresponse);
         }
@@ -648,7 +651,7 @@ namespace WebUI
             encoder.begin();
             encoder.member(JSONencoder::status, "Error not an ESP command");
             _webserver->sendHeader("Cache-Control", "no-cache");
-            _webserver->send(200, "application/json", encoder.end());
+            _webserver->send(400, "application/json", encoder.end());
         }
     }
 
@@ -907,7 +910,7 @@ namespace WebUI
             }
             if (code == 200)
             {
-                smsg = "Ok";
+                smsg = JSONencoder::ok;
             }
 
             // build  JSON
@@ -944,7 +947,7 @@ namespace WebUI
 #else
         JSONencoder encoder;
         encoder.begin();
-        encoder.member(JSONencoder::status, "Ok");
+        encoder.member(JSONencoder::status, JSONencoder::ok);
         encoder.member("authentication_lvl", "admin");
         _webserver->sendHeader("Cache-Control", "no-cache");
         _webserver->send(200, "application/json", encoder.end());
@@ -968,7 +971,7 @@ namespace WebUI
         }
 
         String path;
-        String status = "Ok";
+        String status = JSONencoder::ok;
         if (_upload_status == UploadStatusType::FAILED)
         {
             status = "Upload failed";
@@ -1175,7 +1178,7 @@ namespace WebUI
         }
         encoder.end_array();
         encoder.member("path", path);
-        encoder.member(JSONencoder::status, status);
+        encoder.member(JSONencoder::status, JSONencoder::ok);
         size_t totalBytes;
         size_t usedBytes;
         totalBytes = SPIFFS.totalBytes();
@@ -1285,7 +1288,7 @@ namespace WebUI
                         {
                             _upload_status = UploadStatusType::FAILED;
                             grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
-                            pushError(ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space");
+                            pushError(ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space", 507);
                         }
                     }
 
@@ -1304,7 +1307,7 @@ namespace WebUI
                             // if no set cancel flag
                             _upload_status = UploadStatusType::FAILED;
                             grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
-                            pushError(ESP_ERROR_FILE_CREATION, "File creation failed");
+                            pushError(ESP_ERROR_FILE_CREATION, "File creation failed", 500);
                         }
                     }
                     // Upload write
@@ -1321,7 +1324,7 @@ namespace WebUI
                         {
                             _upload_status = UploadStatusType::FAILED;
                             grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
-                            pushError(ESP_ERROR_FILE_WRITE, "File write failed");
+                            pushError(ESP_ERROR_FILE_WRITE, "File write failed", 500);
                         }
                     }
                     else
@@ -1329,7 +1332,7 @@ namespace WebUI
                         // we have a problem set flag UploadStatusType::FAILED
                         _upload_status = UploadStatusType::FAILED;
                         grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
-                        pushError(ESP_ERROR_FILE_WRITE, "File write failed");
+                        pushError(ESP_ERROR_FILE_WRITE, "File write failed", 500);
                     }
                     // Upload end
                     //**************
@@ -1359,14 +1362,14 @@ namespace WebUI
                         else
                         {
                             grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
-                            pushError(ESP_ERROR_UPLOAD, "File upload failed");
+                            pushError(ESP_ERROR_UPLOAD, "File upload failed", 500);
                         }
                     }
                     else
                     {
                         // we have a problem set flag UploadStatusType::FAILED
                         _upload_status = UploadStatusType::FAILED;
-                        pushError(ESP_ERROR_FILE_CLOSE, "File close failed");
+                        pushError(ESP_ERROR_FILE_CLOSE, "File close failed", 500);
                         grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
                     }
                     // Upload cancelled
@@ -1469,7 +1472,7 @@ namespace WebUI
                     }
                     if (flashsize < maxSketchSpace)
                     {
-                        pushError(ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space");
+                        pushError(ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space", 507);
                         _upload_status = UploadStatusType::FAILED;
                         grbl_send(CLIENT_ALL, "[MSG:Update cancelled]\r\n");
                     }
@@ -1480,7 +1483,7 @@ namespace WebUI
                         { // start with max available size
                             _upload_status = UploadStatusType::FAILED;
                             grbl_send(CLIENT_ALL, "[MSG:Update cancelled]\r\n");
-                            pushError(ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space");
+                            pushError(ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space", 507);
                         }
                         else
                         {
@@ -1516,7 +1519,7 @@ namespace WebUI
                         {
                             _upload_status = UploadStatusType::FAILED;
                             grbl_send(CLIENT_ALL, "[MSG:Update write failed]\r\n");
-                            pushError(ESP_ERROR_FILE_WRITE, "File write failed");
+                            pushError(ESP_ERROR_FILE_WRITE, "File write failed", 500);
                         }
                     }
                     // Upload end
@@ -1534,7 +1537,7 @@ namespace WebUI
                     {
                         _upload_status = UploadStatusType::FAILED;
                         grbl_send(CLIENT_ALL, "[MSG:Update failed]\r\n");
-                        pushError(ESP_ERROR_UPLOAD, "Update upload failed");
+                        pushError(ESP_ERROR_UPLOAD, "Update upload failed", 500);
                     }
                 }
                 else if (upload.status == UPLOAD_FILE_ABORTED)
@@ -1621,7 +1624,7 @@ namespace WebUI
         }
 
         String path = "/";
-        String sstatus = "Ok";
+        String sstatus = JSONencoder::ok;
         if ((_upload_status == UploadStatusType::FAILED) || (_upload_status == UploadStatusType::FAILED))
         {
             sstatus = "Upload failed";
@@ -1885,7 +1888,7 @@ namespace WebUI
                     {
                         _upload_status = UploadStatusType::FAILED;
                         grbl_send(CLIENT_ALL, "[MSG:Upload cancelled]\r\n");
-                        pushError(ESP_ERROR_UPLOAD_CANCELLED, "Upload cancelled");
+                        pushError(ESP_ERROR_UPLOAD_CANCELLED, "Upload cancelled",500);
                     }
                     else
                     {
@@ -1904,7 +1907,7 @@ namespace WebUI
                             {
                                 _upload_status = UploadStatusType::FAILED;
                                 grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
-                                pushError(ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space");
+                                pushError(ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space",507);
                             }
                         }
                         if (_upload_status != UploadStatusType::FAILED)
@@ -1917,7 +1920,7 @@ namespace WebUI
                                 // if creation failed
                                 _upload_status = UploadStatusType::FAILED;
                                 grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
-                                pushError(ESP_ERROR_FILE_CREATION, "File creation failed");
+                                pushError(ESP_ERROR_FILE_CREATION, "File creation failed",500);
                             }
                             // if creation succeed set flag UploadStatusType::ONGOING
                             else
@@ -1939,14 +1942,14 @@ namespace WebUI
                         {
                             _upload_status = UploadStatusType::FAILED;
                             grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
-                            pushError(ESP_ERROR_FILE_WRITE, "File write failed");
+                            pushError(ESP_ERROR_FILE_WRITE, "File write failed",500);
                         }
                     }
                     else
                     { // if error set flag UploadStatusType::FAILED
                         _upload_status = UploadStatusType::FAILED;
                         grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
-                        pushError(ESP_ERROR_FILE_WRITE, "File write failed");
+                        pushError(ESP_ERROR_FILE_WRITE, "File write failed",500);
                     }
                     // Upload end
                     //**************
@@ -1968,7 +1971,7 @@ namespace WebUI
                             if (_webserver->arg(sizeargname) != String(filesize))
                             {
                                 _upload_status = UploadStatusType::FAILED;
-                                pushError(ESP_ERROR_UPLOAD, "File upload mismatch");
+                                pushError(ESP_ERROR_UPLOAD, "File upload mismatch",500);
                                 grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
                             }
                         }
@@ -1977,7 +1980,7 @@ namespace WebUI
                     {
                         _upload_status = UploadStatusType::FAILED;
                         grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
-                        pushError(ESP_ERROR_FILE_CLOSE, "File close failed");
+                        pushError(ESP_ERROR_FILE_CLOSE, "File close failed",500);
                     }
                     if (_upload_status == UploadStatusType::ONGOING)
                     {
@@ -1987,7 +1990,7 @@ namespace WebUI
                     else
                     {
                         _upload_status = UploadStatusType::FAILED;
-                        pushError(ESP_ERROR_UPLOAD, "Upload error");
+                        pushError(ESP_ERROR_UPLOAD, "Upload error",500);
                     }
                 }
                 else
@@ -2074,7 +2077,7 @@ namespace WebUI
             // USE_SERIAL.printf("[%u] get Text: %s\n", num, payload);
 
             // send message to client
-            // webSocket.sendTXT(num, "message here");
+            _socket_server->sendTXT(_id_connection, "got it");
 
             // send data to all connected clients
             // webSocket.broadcastTXT("message here");

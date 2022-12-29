@@ -119,57 +119,8 @@ namespace Spindles {
         _spindown_delay = spindle_delay_spindown->get() * 1000.0;
     }
 
-    uint32_t PWM::calc_pwm_value(uint32_t input) {
-        uint32_t output;
-        output = 1 << _pwm_precision;
-        output = (input * output) / 1000;
-        return output;
-    }
-
     uint32_t PWM::set_rpm(uint32_t rpm) {
-        // uint32_t pwm_value;
-
-        // if (_output_pin == UNDEFINED_PIN) {
-        //     return rpm;
-        // }
-
-        // // apply override
-        // rpm = rpm * sys.spindle_speed_ovr / 100;  // Scale by spindle speed override value (uint8_t percent)
-
-        // // apply limits
-        // if ((_min_rpm >= _max_rpm) || (rpm >= _max_rpm)) {
-        //     rpm = _max_rpm;
-        // } else if (rpm != 0 && rpm <= _min_rpm) {
-        //     rpm = _min_rpm;
-        // }
-
-        // sys.spindle_speed = rpm;
-
-        // if (_piecewide_linear) {
-        //     //pwm_value = piecewise_linear_fit(rpm); TODO
-        //     pwm_value = 0;
-        //     grbl_msg_sendf(CLIENT_ALL, MsgLevel::Info, "Warning: Linear fit not implemented yet.");
-
-        // } else {
-        //     if (rpm == 0) {
-        //         pwm_value = _pwm_off_value;
-        //     } else {
-        //         pwm_value = map_uint32_t(rpm, _min_rpm, _max_rpm, _pwm_min_value, _pwm_max_value);
-        //     }
-        // }
-
-        // set_enable_pin(gc_state.modal.spindle != SpindleState::Disable);
-        // set_output(pwm_value);
-
-        // return 0;
-
         uint32_t pwm_value;
-
-        uint32_t origin_value;
-        uint32_t last_value;
-        uint32_t diff_value;
-        uint8_t mode;
-
 
         if (_output_pin == UNDEFINED_PIN) {
             return rpm;
@@ -185,9 +136,6 @@ namespace Spindles {
             rpm = _min_rpm;
         }
 
-        origin_value = sys.spindle_speed;
-        last_value = rpm;
-
         sys.spindle_speed = rpm;
 
         if (_piecewide_linear) {
@@ -199,42 +147,12 @@ namespace Spindles {
             if (rpm == 0) {
                 pwm_value = _pwm_off_value;
             } else {
-                // pwm_value = map_uint32_t(rpm, _min_rpm, _max_rpm, _pwm_min_value, _pwm_max_value);
-               pwm_value =  calc_pwm_value(rpm);
+                pwm_value = map_uint32_t(rpm, _min_rpm, _max_rpm, _pwm_min_value, _pwm_max_value);
             }
         }
 
         set_enable_pin(gc_state.modal.spindle != SpindleState::Disable);
-
-
-        // diff_value
-        if(origin_value < last_value) {
-            diff_value = last_value - origin_value;
-        }
-        else if(origin_value > last_value) {
-            diff_value = origin_value - last_value;
-        }
-
-        if(last_value == 0) {  
-            set_output(0);
-        }
-        else if(origin_value < last_value) {
-            for(uint32_t i = origin_value; i < last_value; i++) {
-                set_output(calc_pwm_value(i));
-                if((last_value - i) < (diff_value / 2)) { delay(1); }  
-            }
-        }
-        else if(origin_value == last_value) {
-
-        }
-        else if(origin_value > last_value) {
-            for(uint32_t i = origin_value; i > last_value; i--) {
-                set_output(calc_pwm_value(i));
-                // delay(1);
-            }
-        }
-
-        // set_output(pwm_value);
+        set_output(pwm_value);
 
         return 0;
     }
@@ -248,14 +166,14 @@ namespace Spindles {
             sys.spindle_speed = 0;
             stop();
             if (use_delays && (_current_state != state)) {
-                delay(_spinup_delay);
+                delay(_spindown_delay);
             }
         } else {
             set_dir_pin(state == SpindleState::Cw);
             set_rpm(rpm);
             set_enable_pin(state != SpindleState::Disable);  // must be done after setting rpm for enable features to work
             if (use_delays && (_current_state != state)) {
-                delay(_spindown_delay);
+                delay(_spinup_delay);
             }
         }
 
@@ -352,29 +270,14 @@ namespace Spindles {
 		determine the highest precision where (1 << precision) < period
 	*/
     uint8_t PWM::calc_pwm_precision(uint32_t freq) {
-        // uint8_t precision = 0;
+        uint8_t precision = 0;
 
-        // // increase the precision (bits) until it exceeds allow by frequency the max or is 16
-        // while ((1 << precision) < (uint32_t)(80000000 / freq) && precision <= 16) {
-        //     precision++;
-        // }
-
-        // return precision - 1;
-        if (freq == 0) {
-            freq = 1;  // Limited elsewhere but just to be safe...
+        // increase the precision (bits) until it exceeds allow by frequency the max or is 16
+        while ((1 << precision) < (uint32_t)(80000000 / freq) && precision <= 16) {
+            precision++;
         }
 
-        // Increase the precision (bits) until it exceeds the frequency
-        // The hardware maximum precision is 20 bits
-        const uint8_t  ledcMaxBits = 20;
-        const uint32_t apbFreq     = 80000000;
-        const uint32_t maxCount    = apbFreq / freq;
-        for (uint8_t bits = 2; bits <= ledcMaxBits; ++bits) {
-            if ((1u << bits) > maxCount) {
-                return bits - 1;
-            }
-        }
-        return ledcMaxBits;
+        return precision - 1;
     }
 
     void PWM::deinit() {

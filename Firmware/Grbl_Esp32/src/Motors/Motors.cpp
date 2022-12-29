@@ -45,7 +45,7 @@
 
 Motors::Motor* myMotor[MAX_AXES][MAX_GANGED];  // number of axes (normal and ganged)
 void           init_motors() {
-    // grbl_msg_sendf(CLIENT_SERIAL, MsgLevel::Info, "Init Motors");
+    grbl_msg_sendf(CLIENT_SERIAL, MsgLevel::Info, "Init Motors");
 
     auto n_axis = number_axis->get();
 
@@ -478,7 +478,7 @@ uint8_t motors_set_homing_mode(uint8_t homing_mask, bool isHoming) {
 }
 
 bool motors_direction(uint8_t dir_mask) {
-    auto n_axis = number_axis->get();    //mks-wang
+    auto n_axis = number_axis->get();
     //grbl_msg_sendf(CLIENT_SERIAL, MsgLevel::Info, "motors_set_direction_pins:0x%02X", onMask);
 
     // Set the direction pins, but optimize for the common
@@ -492,6 +492,7 @@ bool motors_direction(uint8_t dir_mask) {
             myMotor[axis][0]->set_direction(thisDir);
             myMotor[axis][1]->set_direction(thisDir);
         }
+
         return true;
     } else {
         return false;

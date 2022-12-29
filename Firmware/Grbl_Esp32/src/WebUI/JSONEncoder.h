@@ -21,6 +21,7 @@ namespace WebUI {
 
     public:
         static const char* status;
+        static const char* ok;
         // If you don't set _pretty it defaults to false
         JSONencoder();
 

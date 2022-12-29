@@ -45,7 +45,7 @@
 #ifdef N_AXIS
     #undef N_AXIS
 #endif
-#define N_AXIS 3
+#define N_AXIS 2
 
 #define HTTP_UPLOAD_BUFLEN 1024*10
 
@@ -133,9 +133,9 @@
 #define DEFAULT_STEPPER_IDLE_LOCK_TIME      25
 
 #define DEFAULT_STEPPING_INVERT_MASK    	0 // uint8_t
-#define DEFAULT_DIRECTION_INVERT_MASK   	5 // uint8_t
+#define DEFAULT_DIRECTION_INVERT_MASK   	2 // uint8_t
 #define DEFAULT_INVERT_ST_ENABLE        	0 // boolean
-#define DEFAULT_INVERT_LIMIT_PINS       	0 // boolean
+#define DEFAULT_INVERT_LIMIT_PINS       	1 // boolean
 #define DEFAULT_INVERT_PROBE_PIN        	0 // boolean
 
 #define DEFAULT_STATUS_REPORT_MASK 			1
@@ -149,7 +149,7 @@
 
 #define DEFAULT_HOMING_CYCLE_0              (bit(X_AXIS) | bit(Y_AXIS))
 #define DEFAULT_HOMING_CYCLE_1              0           // (bit(Z_AXIS))        /* If you want star Z axis, select (bit(Z_AXIS)) */
-#define DEFAULT_HOMING_ENABLE           	0           // false
+#define DEFAULT_HOMING_ENABLE           	1           // false
 #define DEFAULT_HOMING_DIR_MASK         	3           // move positive dir Z,negative X,Y
 #define DEFAULT_HOMING_FEED_RATE        	300.0       // mm/min
 #define DEFAULT_HOMING_SEEK_RATE        	1000.0      // mm/min

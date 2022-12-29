@@ -7,6 +7,7 @@
 namespace WebUI
 {
     const char *JSONencoder::status = "status";
+    const char *JSONencoder::ok = "ok";
     // Constructor that supplies a default falue for "pretty"
     JSONencoder::JSONencoder() : JSONencoder(false) {}
 

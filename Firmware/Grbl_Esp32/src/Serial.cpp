@@ -271,7 +271,7 @@ void execute_realtime_command(Cmd command, uint8_t client) {
         case Cmd::DebugReport:
 #ifdef DEBUG
             sys_rt_exec_debug = true;
-#endif.
+#endif
             break;
         case Cmd::SpindleOvrStop:
             sys_rt_exec_accessory_override.bit.spindleOvrStop = 1;

@@ -59,7 +59,7 @@ void IRAM_ATTR isr_limit_switches() {
                 mc_reset();                                // Initiate system kill.
                 sys_rt_exec_alarm = ExecAlarm::HardLimit;  // Indicate hard limit critical event
             }
-#    else   
+#    else
             grbl_msg_sendf(CLIENT_ALL, MsgLevel::Debug, "Hard limits");
             mc_reset();                                // Initiate system kill.
             sys_rt_exec_alarm = ExecAlarm::HardLimit;  // Indicate hard limit critical event
@@ -98,9 +98,9 @@ void limits_go_home(uint8_t cycle_mask) {
     pl_data->motion                = {};
     pl_data->motion.systemMotion   = 1;
     pl_data->motion.noFeedOverride = 1;
-    #ifdef USE_LINE_NUMBERS
-        pl_data->line_number = HOMING_CYCLE_LINE_NUMBER;
-    #endif
+#ifdef USE_LINE_NUMBERS
+    pl_data->line_number = HOMING_CYCLE_LINE_NUMBER;
+#endif
     // Initialize variables used for homing computations.
     uint8_t n_cycle = (2 * n_homing_locate_cycle + 1);
     uint8_t step_pin[MAX_N_AXIS];
@@ -415,4 +415,13 @@ bool limitsSwitchDefined(uint8_t axis, uint8_t gang_index) {
 
 bool __attribute__((weak)) user_defined_homing(uint8_t cycle_mask) {
     return false;
+}
+
+void limitsCheckSoft(float* target) {
+    if (soft_limits->get()) {
+        // NOTE: Block jog state. Jogging is a special case and soft limits are handled independently.
+        if (sys.state != State::Jog && sys.state != State::Homing) {
+            limits_soft_check(target);
+        }
+    }
 }

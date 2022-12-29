@@ -203,61 +203,9 @@ namespace WebUI
     {
         if (espresponse)
         {
-            espresponse->print(s);
-            espresponse->flush();
+            espresponse->sendJson(s);
         }
     }
-    // static void webPrintSetColumn(int column)
-    // {
-    //     while (webColumn < column)
-    //     {
-    //         webPrint(" ");
-    //     }
-    // }
-    // static void webPrint(String s) { webPrint(s.c_str()); }
-    // static void webPrint(const char *s1, const char *s2)
-    // {
-    //     webPrint(s1);
-    //     webPrint(s2);
-    // }
-    // static void webPrint(const char *s1, String s2)
-    // {
-    //     webPrint(s1);
-    //     webPrint(s2.c_str());
-    // }
-    // static void webPrint(const char *s1, const char *s2, const char *s3)
-    // {
-    //     webPrint(s1);
-    //     webPrint(s2);
-    //     webPrint(s3);
-    // }
-    // static void webPrintln(const char *s)
-    // {
-    //     webPrint(s);
-    //     webPrint("\r\n");
-    //     webColumn = 0;
-    // }
-    // static void webPrintln(String s) { webPrintln(s.c_str()); }
-    // static void webPrintln(const char *s1, const char *s2)
-    // {
-    //     webPrint(s1);
-    //     webPrintln(s2);
-    // }
-    // static void webPrintln(const char *s, IPAddress ip)
-    // {
-    //     webPrint(s);
-    //     webPrintln(ip.toString().c_str());
-    // }
-    // static void webPrintln(const char *s, String s2) { webPrintln(s, s2.c_str()); }
-
-    // static void print_mac(const char *s, String mac)
-    // {
-    //     webPrint(s);
-    //     webPrint(" (");
-    //     webPrint(mac);
-    //     webPrintln(")");
-    // }
-
     static Error SPIFFSSize(char *parameter, AuthenticationLevel auth_level)
     { // ESP720
         JSONencoder encoder;
@@ -279,7 +227,7 @@ namespace WebUI
             return Error::InvalidValue;
         }
         SPIFFS.format();
-        encoder.member(JSONencoder::status, "Ok");
+        encoder.member(JSONencoder::status, JSONencoder::ok);
         webPrint(encoder.end().c_str());
         return Error::Ok;
     }
@@ -363,7 +311,7 @@ namespace WebUI
             //            if (currentline.length() > 0) {
             //                webPrintln(currentline);
             //            }
-            encoder.member(JSONencoder::status, "Ok");
+            encoder.member(JSONencoder::status, JSONencoder::ok);
             encoder.member("Content", currentfile.readStringUntil('\n'));
             webPrint(encoder.end().c_str());
         }
@@ -406,7 +354,7 @@ namespace WebUI
         {
             err = notification_ts->setStringValue(ts);
         }
-        encoder.member(JSONencoder::status, err == Error::OK ? "Ok" : "Error during setting");
+        encoder.member(JSONencoder::status, err == Error::OK ? JSONencoder::ok : "Error during setting");
         webprint(encoder.end().c_str());
         return err;
     }
@@ -427,7 +375,7 @@ namespace WebUI
             webPrint(encoder.end().c_str());
             return Error::MessageFailed;
         }
-        encoder.member(JSONencoder::status, "Ok");
+        encoder.member(JSONencoder::status, JSonencoder::ok);
         webPrint(encoder.end().c_str());
         return Error::Ok;
     }
@@ -441,7 +389,7 @@ namespace WebUI
         if (*parameter == '\0')
         {
             user_password->setDefault();
-            encoder.member(JSONencoder::status, "Ok");
+            encoder.member(JSONencoder::status, JSONencoder::ok);
             webPrint(encoder.end().c_str());
             return Error::Ok;
         }
@@ -451,7 +399,7 @@ namespace WebUI
             webPrint(encoder.end().c_str());
             return Error::InvalidValue;
         }
-        encoder.member(JSONencoder::status, "Ok");
+        encoder.member(JSONencoder::status, JSONencoder::ok);
         webPrint(encoder.end().c_str());
 
         return Error::Ok;
@@ -703,10 +651,6 @@ namespace WebUI
         }
         j.end_array();
         webPrint(j.end().c_str());
-        if (espresponse->client() != CLIENT_WEBUI)
-        {
-            espresponse->println("");
-        }
         return Error::Ok;
     }
 #endif
@@ -791,7 +735,7 @@ namespace WebUI
             webPrint(encoder.end().c_str());
             return Error::FsFailedOpenFile;
         }
-        encoder.member(JSONencoder::status, "Ok");
+        encoder.member(JSONencoder::status, JSONencoder::ok);
         webPrint(encoder.end().c_str());
 
         return Error::Ok;
@@ -819,7 +763,7 @@ namespace WebUI
             file += fileLine;
         }
         closeFile();
-        encoder.member(JSONencoder::status, "Ok");
+        encoder.member(JSONencoder::status, JSONencoder::ok);
         encoder.member("FileContent", file);
         webPrint(encoder.end().c_str());
         return Error::Ok;
@@ -851,7 +795,7 @@ namespace WebUI
         {
             // No need notification here it is just a macro
             closeFile();
-            encoder.member(JSONencoder::status, "Ok");
+            encoder.member(JSONencoder::status, JSONencoder::ok);
             webPrint(encoder.end().c_str());
             return Error::Ok;
         }
@@ -1124,7 +1068,7 @@ namespace WebUI
 
 #else
             wifi_config.begin();
-            encoder.member(JSONencoder::status, "Ok");
+            encoder.member(JSONencoder::status, JSONencoder::ok);
             webPrint(encoder.end().c_str());
             return Error::Ok;
 #endif
@@ -1135,7 +1079,7 @@ namespace WebUI
             return Error::BtFailBegin;
 #else
             bt_config.begin();
-            encoder.member(JSONencoder::status, "Ok");
+            encoder.member(JSONencoder::status, JSONencoder::ok);
             webPrint(encoder.end().c_str());
             return Error::Ok;
 #endif
@@ -1145,7 +1089,7 @@ namespace WebUI
             return Error::Ok;
         }
 #endif
-        encoder.member(JSONencoder::status, "Ok");
+        encoder.member(JSONencoder::status, JSONencoder::ok);
         webPrint(encoder.end().c_str());
         return Error::Ok;
     }
@@ -1191,7 +1135,7 @@ namespace WebUI
         {
             err = wifi_sta_gateway->setStringValue(gateway);
         }
-        encoder.member(JSONencoder::status, err == Error::Ok ? "Ok" : "Error during setting up");
+        encoder.member(JSONencoder::status, err == Error::Ok ? JSONencoder::ok : "Error during setting up");
         webPrint(encoder.end().c_str());
         return err;
     }
