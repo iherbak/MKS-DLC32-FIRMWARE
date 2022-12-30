@@ -23,7 +23,8 @@ Then compile and upload.
 - more json format as answer to be more consistent
 - /grblsettings endpoint to get grbl settings as a json instead of relying on websocket answer
 - /espcommand endpoint to handle esp commands
-- /command only handles non-esp commands, like grbl and gcode comamnds
+- /command only handles non-esp commands, like grbl and gcode commands
+- /boundary endpoint to figure out file boundary to be able to draw bounds
 - both /command and /espcommand looks for cmd query param (no more commandText or plain)
 
 - Websocket status messages
