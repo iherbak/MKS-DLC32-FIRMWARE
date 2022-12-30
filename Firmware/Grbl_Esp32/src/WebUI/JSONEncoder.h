@@ -38,6 +38,7 @@ namespace WebUI {
         void member(const char* tag, const char* value);
         void member(const char* tag, String value);
         void member(const char* tag, int value);
+        void memberf(const char* tag, float value);
 
         // begin_array() starts a "tag":[  array element
         void begin_array(const char* tag);

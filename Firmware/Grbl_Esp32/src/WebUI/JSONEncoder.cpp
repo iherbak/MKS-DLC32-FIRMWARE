@@ -160,6 +160,7 @@ namespace WebUI
 
     // Creates a "tag":"value" member from an integer
     void JSONencoder::member(const char *tag, int value) { member(tag, String(value)); }
+    void JSONencoder::memberf(const char *tag, float value) { member(tag, String(value)); }
 
     // Creates an Esp32_WebUI configuration item specification from
     // a value passed in as a C-style string.

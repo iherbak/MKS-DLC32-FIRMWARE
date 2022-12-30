@@ -84,6 +84,7 @@ namespace WebUI {
         static void _handle_esp_command(bool);
         static void handle_web_command() { _handle_web_command(false); }
         static void handle_esp_command() { _handle_esp_command(false); }
+        static void handle_file_boundary();
         static void handle_web_command_silent() { _handle_web_command(true); }
         static void handle_Websocket_Event(uint8_t num, uint8_t type, uint8_t* payload, size_t length);
         static void SPIFFSFileupload();

@@ -49,6 +49,7 @@
 #ifdef ENABLE_CAPTIVE_PORTAL
 #include <DNSServer.h>
 #include "JSONEncoder.h"
+#include <Regexp.h>
 
 namespace WebUI
 {
@@ -159,6 +160,7 @@ namespace WebUI
         // web commands
         _webserver->on("/command", HTTP_ANY, handle_web_command);
         _webserver->on("/espcommand", HTTP_ANY, handle_esp_command);
+        _webserver->on("/boundary", HTTP_ANY, handle_file_boundary);
         _webserver->on("/command_silent", HTTP_ANY, handle_web_command_silent);
 
         // SPIFFS
@@ -652,6 +654,133 @@ namespace WebUI
             encoder.member(JSONencoder::status, "Error not an ESP command");
             _webserver->sendHeader("Cache-Control", "no-cache");
             _webserver->send(400, "application/json", encoder.end());
+        }
+    }
+
+    void Web_Server::handle_file_boundary()
+    {
+        AuthenticationLevel auth_level = is_authenticated();
+        if (!_webserver->hasArg("filename"))
+        {
+            JSONencoder encoder;
+            encoder.begin();
+            encoder.member(JSONencoder::status, "Missing file query parameter");
+            _webserver->sendHeader("Cache-Control", "no-cache");
+            _webserver->send(400, "application/json", encoder.end());
+            return;
+        }
+        String filename;
+        String shortname = _webserver->arg("filename");
+        filename = "/" + shortname;
+        shortname.replace("/", "");
+        filename.replace("//", "/");
+
+        if (get_sd_state(true) != SDState::Idle)
+        {
+            _upload_status = UploadStatusType::FAILED;
+            grbl_send(CLIENT_ALL, "[MSG:Boundary cancelled]\r\n");
+        }
+        else
+        {
+            set_sd_state(SDState::BusyParsing);
+
+            if (!SD.exists(filename))
+            {
+                JSONencoder encoder;
+                encoder.begin();
+                encoder.member(JSONencoder::status, "No such file " + filename);
+                _webserver->sendHeader("Cache-Control", "no-cache");
+                _webserver->send(404, "application/json", encoder.end());
+                return;
+            }
+            else
+            {
+                File file = SD.open(filename, "r");
+                char *xRegex = "X(%d+%.*%d*)";
+                char *yRegex = "Y(%d+%.*%d*)";
+                char *lightBurnBoundsRegex = "Bounds: X(%d+%.*%d*) Y(%d+%.*%d*) to X(%d+%.*%d*) Y(%d+%.*%d*)";
+                float minX = 0, maxX = 0, minY = 0, maxY = 0;
+                char buf[10];
+                String allresult;
+                bool lightburnmatch = false;
+                while (file.available() && !lightburnmatch)
+                {
+                    auto line = file.readStringUntil('\n');
+                    // if not comment
+                    if (line.charAt(0) != ';')
+                    {
+                        MatchState ms;
+                        char dest[line.length()];
+                        strcpy(dest, line.c_str());
+                        ms.Target(dest);
+                        char result = ms.Match(xRegex);
+                        if (result == REGEXP_MATCHED)
+                        {
+                            // we just want the number in level0
+                            char *capture = ms.GetCapture(buf, 0);
+                            float match = atof(capture);
+                            if (match < minX)
+                            {
+                                minX = match;
+                            }
+                            if (match > maxX)
+                            {
+                                maxX = match;
+                            }
+                        }
+
+                        result = ms.Match(yRegex);
+                        if (result == REGEXP_MATCHED)
+                        {
+                            // we just want the number in level0
+                            char *capture = ms.GetCapture(buf, 0);
+                            float match = atof(capture);
+                            if (match < minY)
+                            {
+                                minY = match;
+                            }
+                            if (match > maxY)
+                            {
+                                maxY = match;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        MatchState ms;
+                        char dest[line.length()];
+                        strcpy(dest, line.c_str());
+                        ms.Target(dest);
+                        char result = ms.Match(lightBurnBoundsRegex);
+                        if (result == REGEXP_MATCHED)
+                        {
+                            char *capture = ms.GetCapture(buf, 0);
+                            minX = atof(capture);
+                            capture = ms.GetCapture(buf, 1);
+                            minY = atof(capture);
+                            capture = ms.GetCapture(buf, 2);
+                            maxX = atof(capture);
+                            capture = ms.GetCapture(buf, 3);
+                            maxY = atof(capture);
+                            lightburnmatch = true;
+                        }
+                    }
+                }
+                file.close();
+                JSONencoder encoder;
+                encoder.begin();
+                encoder.member(JSONencoder::status, JSONencoder::ok);
+                encoder.begin_named_object("bounds");
+                encoder.memberf("minX", minX);
+                encoder.memberf("maxX", maxX);
+                encoder.memberf("minY", minY);
+                encoder.memberf("maxY", maxY);
+                encoder.member("lightburnMatch", lightburnmatch);
+                encoder.end_object();
+                _webserver->sendHeader("Cache-Control", "no-cache");
+                _webserver->send(404, "application/json", encoder.end());
+            }
+            set_sd_state(SDState::Idle);
         }
     }
 
@@ -1669,6 +1798,7 @@ namespace WebUI
                 filename = path + shortname;
                 shortname.replace("/", "");
                 filename.replace("//", "/");
+                grbl_msg_sendf(CLIENT_ALL, MsgLevel::Info, filename.c_str());
                 if (!SD.exists(filename))
                 {
                     sstatus = shortname + " does not exist!";
@@ -1888,7 +2018,7 @@ namespace WebUI
                     {
                         _upload_status = UploadStatusType::FAILED;
                         grbl_send(CLIENT_ALL, "[MSG:Upload cancelled]\r\n");
-                        pushError(ESP_ERROR_UPLOAD_CANCELLED, "Upload cancelled",500);
+                        pushError(ESP_ERROR_UPLOAD_CANCELLED, "Upload cancelled", 500);
                     }
                     else
                     {
@@ -1907,7 +2037,7 @@ namespace WebUI
                             {
                                 _upload_status = UploadStatusType::FAILED;
                                 grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
-                                pushError(ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space",507);
+                                pushError(ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space", 507);
                             }
                         }
                         if (_upload_status != UploadStatusType::FAILED)
@@ -1920,7 +2050,7 @@ namespace WebUI
                                 // if creation failed
                                 _upload_status = UploadStatusType::FAILED;
                                 grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
-                                pushError(ESP_ERROR_FILE_CREATION, "File creation failed",500);
+                                pushError(ESP_ERROR_FILE_CREATION, "File creation failed", 500);
                             }
                             // if creation succeed set flag UploadStatusType::ONGOING
                             else
@@ -1942,14 +2072,14 @@ namespace WebUI
                         {
                             _upload_status = UploadStatusType::FAILED;
                             grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
-                            pushError(ESP_ERROR_FILE_WRITE, "File write failed",500);
+                            pushError(ESP_ERROR_FILE_WRITE, "File write failed", 500);
                         }
                     }
                     else
                     { // if error set flag UploadStatusType::FAILED
                         _upload_status = UploadStatusType::FAILED;
                         grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
-                        pushError(ESP_ERROR_FILE_WRITE, "File write failed",500);
+                        pushError(ESP_ERROR_FILE_WRITE, "File write failed", 500);
                     }
                     // Upload end
                     //**************
@@ -1971,7 +2101,7 @@ namespace WebUI
                             if (_webserver->arg(sizeargname) != String(filesize))
                             {
                                 _upload_status = UploadStatusType::FAILED;
-                                pushError(ESP_ERROR_UPLOAD, "File upload mismatch",500);
+                                pushError(ESP_ERROR_UPLOAD, "File upload mismatch", 500);
                                 grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
                             }
                         }
@@ -1980,7 +2110,7 @@ namespace WebUI
                     {
                         _upload_status = UploadStatusType::FAILED;
                         grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
-                        pushError(ESP_ERROR_FILE_CLOSE, "File close failed",500);
+                        pushError(ESP_ERROR_FILE_CLOSE, "File close failed", 500);
                     }
                     if (_upload_status == UploadStatusType::ONGOING)
                     {
@@ -1990,7 +2120,7 @@ namespace WebUI
                     else
                     {
                         _upload_status = UploadStatusType::FAILED;
-                        pushError(ESP_ERROR_UPLOAD, "Upload error",500);
+                        pushError(ESP_ERROR_UPLOAD, "Upload error", 500);
                     }
                 }
                 else
