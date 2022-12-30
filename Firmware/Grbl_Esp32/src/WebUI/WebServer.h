@@ -92,6 +92,7 @@ namespace WebUI {
         static void handleUpdate();
         static void WebUpdateUpload();
         static void pushError(int code, const char* st, bool web_error = 500, uint16_t timeout = 1000);
+        static void sendStatus(int httpCode, String status);
         static void cancelUpload();
 #ifdef ENABLE_SD_CARD
         static void handle_direct_SDFileList();

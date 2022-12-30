@@ -291,12 +291,7 @@ namespace WebUI
     {
         if (is_authenticated() == AuthenticationLevel::LEVEL_GUEST)
         {
-            JSONencoder encoder;
-            encoder.begin();
-            encoder.member(JSONencoder::status, "Page not Found");
-            _webserver->sendHeader("Cache-Control", "no-cache");
-            _webserver->send(301, "application/json", encoder.end());
-            //_webserver->client().stop();
+            sendStatus(301, "Page not Found");
             return;
         }
 
@@ -312,11 +307,7 @@ namespace WebUI
             path = path.substring(3);
             if (SDState::Idle != get_sd_state(true))
             {
-                JSONencoder encoder;
-                encoder.begin();
-                encoder.member(JSONencoder::status, "cannot open: " + path + ", SD is not available.");
-                _webserver->sendHeader("Cache-Control", "no-cache");
-                _webserver->send(404, "application/json", encoder.end());
+                sendStatus(404, "Cannot open: " + path + ", SD is not available.");
             }
             if (SD.exists(pathWithGz) || SD.exists(path))
             {
@@ -366,11 +357,7 @@ namespace WebUI
             }
             else
             {
-                JSONencoder encoder;
-                encoder.begin();
-                encoder.member(JSONencoder::status, "Can not find " + path);
-                _webserver->sendHeader("Cache-Control", "no-cache");
-                _webserver->send(404, "application/json", encoder.end());
+                sendStatus(404, "Can not find " + path);
                 return;
             }
         }
@@ -523,11 +510,7 @@ namespace WebUI
         }
         else
         {
-            JSONencoder encoder;
-            encoder.begin();
-            encoder.member(JSONencoder::status, "Missing command query parameter");
-            _webserver->sendHeader("Cache-Control", "no-cache");
-            _webserver->send(400, "application/json", encoder.end());
+            sendStatus(400, "Missing command query parameter");
             return;
         }
         // if it is internal command [ESPXXX]<parameter>
@@ -535,21 +518,13 @@ namespace WebUI
         int ESPpos = cmd.indexOf("[ESP");
         if (ESPpos > -1)
         {
-            JSONencoder encoder;
-            encoder.begin();
-            encoder.member(JSONencoder::status, "Error ESP command should go to /espcommand");
-            _webserver->sendHeader("Cache-Control", "no-cache");
-            _webserver->send(400, "application/json", encoder.end());
+            sendStatus(400, "Error ESP command should go to /espcommand");
         }
         else
         { // execute GCODE
             if (auth_level == AuthenticationLevel::LEVEL_GUEST)
             {
-                JSONencoder encoder;
-                encoder.begin();
-                encoder.member(JSONencoder::status, "Authantication failed");
-                _webserver->sendHeader("Cache-Control", "no-cache");
-                _webserver->send(401, "application/json", encoder.end());
+                sendStatus(401, "Authantication failed");
                 return;
             }
             // Instead of send several commands one by one by web  / send full set and split here
@@ -584,11 +559,7 @@ namespace WebUI
                     hasError = true;
                 }
             }
-            JSONencoder encoder;
-            encoder.begin();
-            encoder.member(JSONencoder::status, hasError ? "Error" : JSONencoder::ok);
-            _webserver->sendHeader("Cache-Control", "no-cache");
-            _webserver->send(hasError ? 400 : 200, "application/json", encoder.end());
+            sendStatus(hasError ? 400 : 200, hasError ? "Error" : JSONencoder::ok);
         }
     }
 
@@ -602,11 +573,7 @@ namespace WebUI
         }
         else
         {
-            JSONencoder encoder;
-            encoder.begin();
-            encoder.member(JSONencoder::status, "Missing command query parameter");
-            _webserver->sendHeader("Cache-Control", "no-cache");
-            _webserver->send(400, "application/json", encoder.end());
+            sendStatus(400, "Missing command query parameter");
             return;
         }
         // if it is internal command [ESPXXX]<parameter>
@@ -639,21 +606,13 @@ namespace WebUI
             }
             if (!espresponse)
             {
-                JSONencoder encoder;
-                encoder.begin();
-                encoder.member(JSONencoder::status, answer);
-                _webserver->sendHeader("Cache-Control", "no-cache");
-                _webserver->send(err != Error::Ok ? 400 : 200, "application/json", encoder.end());
+                sendStatus(err != Error::Ok ? 400 : 200, answer);
             }
             delete (espresponse);
         }
         else
         {
-            JSONencoder encoder;
-            encoder.begin();
-            encoder.member(JSONencoder::status, "Error not an ESP command");
-            _webserver->sendHeader("Cache-Control", "no-cache");
-            _webserver->send(400, "application/json", encoder.end());
+            sendStatus(400, "Error not an ESP command");
         }
     }
 
@@ -662,11 +621,7 @@ namespace WebUI
         AuthenticationLevel auth_level = is_authenticated();
         if (!_webserver->hasArg("filename"))
         {
-            JSONencoder encoder;
-            encoder.begin();
-            encoder.member(JSONencoder::status, "Missing file query parameter");
-            _webserver->sendHeader("Cache-Control", "no-cache");
-            _webserver->send(400, "application/json", encoder.end());
+            sendStatus(400, "Missing file query parameter");
             return;
         }
         String filename;
@@ -686,11 +641,7 @@ namespace WebUI
 
             if (!SD.exists(filename))
             {
-                JSONencoder encoder;
-                encoder.begin();
-                encoder.member(JSONencoder::status, "No such file " + filename);
-                _webserver->sendHeader("Cache-Control", "no-cache");
-                _webserver->send(404, "application/json", encoder.end());
+                sendStatus(404, "No such file " + filename);
                 return;
             }
             else
@@ -780,6 +731,7 @@ namespace WebUI
                 _webserver->sendHeader("Cache-Control", "no-cache");
                 _webserver->send(404, "application/json", encoder.end());
             }
+            SD.end();
             set_sd_state(SDState::Idle);
         }
     }
@@ -1091,11 +1043,7 @@ namespace WebUI
         if (auth_level == AuthenticationLevel::LEVEL_GUEST)
         {
             _upload_status = UploadStatusType::NONE;
-            JSONencoder encoder;
-            encoder.begin();
-            encoder.member(JSONencoder::status, "Authentication failed!");
-            _webserver->sendHeader("Cache-Control", "no-cache");
-            _webserver->send(401, "application/json", encoder.end());
+            sendStatus(401, "Authentication failed!");
             return;
         }
 
@@ -1329,11 +1277,7 @@ namespace WebUI
             _socket_server->sendTXT(_id_connection, s);
             if (web_error != 0 && _webserver && _webserver->client().available() > 0)
             {
-                JSONencoder encoder;
-                encoder.begin();
-                encoder.member(JSONencoder::status, s);
-                _webserver->sendHeader("Cache-Control", "no-cache");
-                _webserver->send(web_error, "application/json", encoder.end());
+                sendStatus(web_error, s);
             }
 
             uint32_t t = millis();
@@ -1531,21 +1475,11 @@ namespace WebUI
         if (auth_level != AuthenticationLevel::LEVEL_ADMIN)
         {
             _upload_status = UploadStatusType::NONE;
-            JSONencoder encoder;
-            encoder.begin();
-            encoder.member(JSONencoder::status, "Not allowed, log in first!");
-            _webserver->sendHeader("Cache-Control", "no-cache");
-            _webserver->send(403, "application/json", encoder.end());
+            sendStatus(403, "Not allowed, log in first!");
             return;
         }
 
-        JSONencoder encoder;
-        encoder.begin();
-        encoder.member(JSONencoder::status, uint8_t(_upload_status));
-
-        // send status
-        _webserver->sendHeader("Cache-Control", "no-cache");
-        _webserver->send(200, "application/json", encoder.end());
+        sendStatus(200, String(uint8_t(_upload_status)));
 
         // if success restart
         if (_upload_status == UploadStatusType::SUCCESSFUL)
@@ -1744,11 +1678,7 @@ namespace WebUI
         if (is_authenticated() == AuthenticationLevel::LEVEL_GUEST)
         {
             _upload_status = UploadStatusType::NONE;
-            JSONencoder encoder;
-            encoder.begin();
-            encoder.member(JSONencoder::status, "Authentication failed!");
-            _webserver->sendHeader("Cache-Control", "no-cache");
-            _webserver->send(401, "application/json", encoder.end());
+            sendStatus(401,"Authentication failed!");
             return;
         }
 
@@ -1765,11 +1695,7 @@ namespace WebUI
         SDState state = get_sd_state(true);
         if (state != SDState::Idle)
         {
-            JSONencoder encoder;
-            encoder.begin();
-            encoder.member(JSONencoder::status, state == SDState::NotPresent ? "No SD Card" : "Busy");
-            _webserver->sendHeader("Cache-Control", "no-cache");
-            _webserver->send(200, "application/json", encoder.end());
+            sendStatus(200,state == SDState::NotPresent ? "No SD Card" : "Busy");
             return;
         }
         set_sd_state(SDState::BusyParsing);
@@ -1881,8 +1807,6 @@ namespace WebUI
             list_files = false;
         }
 
-        // TODO Settings - consider using the JSONEncoder class
-
         JSONencoder encoder;
         encoder.begin();
         encoder.begin_array("files");
@@ -1893,12 +1817,7 @@ namespace WebUI
 
         if (path != "/" && !SD.exists(path))
         {
-
-            JSONencoder encoder;
-            encoder.begin();
-            encoder.member(JSONencoder::status, path + "does not exist on SD Card");
-            _webserver->sendHeader("Cache-Control", "no-cache");
-            _webserver->send(200, "application/json", encoder.end());
+            sendStatus(404,path + "does not exist on SD Card");
             SD.end();
             set_sd_state(SDState::Idle);
             return;
@@ -1989,11 +1908,7 @@ namespace WebUI
         if (is_authenticated() == AuthenticationLevel::LEVEL_GUEST)
         {
             _upload_status = UploadStatusType::FAILED;
-            JSONencoder encoder;
-            encoder.begin();
-            encoder.member(JSONencoder::status, "Authentication failed");
-            _webserver->sendHeader("Cache-Control", "no-cache");
-            _webserver->send(401, "application/json", encoder.end());
+            sendStatus(401,"Authentication failed");
             pushError(ESP_ERROR_AUTHENTICATION, "Upload rejected", 401);
         }
         else
@@ -2480,5 +2395,14 @@ namespace WebUI
         return AuthenticationLevel::LEVEL_GUEST;
     }
 #endif
+    // push error code and message to websocket
+    void Web_Server::sendStatus(int httpCode, String status)
+    {
+        JSONencoder encoder;
+        encoder.begin();
+        encoder.member(JSONencoder::status, status);
+        _webserver->sendHeader("Cache-Control", "no-cache");
+        _webserver->send(httpCode, "application/json", encoder.end());
+    }
 }
 #endif // Enable HTTP && ENABLE_WIFI
