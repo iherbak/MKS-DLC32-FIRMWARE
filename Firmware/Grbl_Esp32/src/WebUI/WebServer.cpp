@@ -160,7 +160,7 @@ namespace WebUI
         // web commands
         _webserver->on("/command", HTTP_ANY, handle_web_command);
         _webserver->on("/espcommand", HTTP_ANY, handle_esp_command);
-        _webserver->on("/boundary", HTTP_ANY, handle_file_boundary);
+        _webserver->on("/boundaries", HTTP_ANY, handle_file_boundary);
         _webserver->on("/command_silent", HTTP_ANY, handle_web_command_silent);
 
         // SPIFFS
@@ -619,15 +619,25 @@ namespace WebUI
     void Web_Server::handle_file_boundary()
     {
         AuthenticationLevel auth_level = is_authenticated();
-        if (!_webserver->hasArg("filename"))
+        if (!_webserver->hasArg("filename") || !_webserver->hasArg("path"))
         {
-            sendStatus(400, "Missing file query parameter");
+            sendStatus(400, "Missing filename/path query parameter");
             return;
         }
         String filename;
+        String path = "/";
+        path += _webserver->arg("path");
+
+        // to have a clean path
+        path.trim();
+        path.replace("//", "/");
+        if (path[path.length() - 1] != '/')
+        {
+            path += "/";
+        }
+
         String shortname = _webserver->arg("filename");
-        filename = "/" + shortname;
-        shortname.replace("/", "");
+        filename = path + shortname;
         filename.replace("//", "/");
 
         if (get_sd_state(true) != SDState::Idle)
@@ -729,7 +739,7 @@ namespace WebUI
                 encoder.member("lightburnMatch", lightburnmatch);
                 encoder.end_object();
                 _webserver->sendHeader("Cache-Control", "no-cache");
-                _webserver->send(404, "application/json", encoder.end());
+                _webserver->send(200, "application/json", encoder.end());
             }
             SD.end();
             set_sd_state(SDState::Idle);
@@ -1678,7 +1688,7 @@ namespace WebUI
         if (is_authenticated() == AuthenticationLevel::LEVEL_GUEST)
         {
             _upload_status = UploadStatusType::NONE;
-            sendStatus(401,"Authentication failed!");
+            sendStatus(401, "Authentication failed!");
             return;
         }
 
@@ -1695,7 +1705,7 @@ namespace WebUI
         SDState state = get_sd_state(true);
         if (state != SDState::Idle)
         {
-            sendStatus(200,state == SDState::NotPresent ? "No SD Card" : "Busy");
+            sendStatus(200, state == SDState::NotPresent ? "No SD Card" : "Busy");
             return;
         }
         set_sd_state(SDState::BusyParsing);
@@ -1817,7 +1827,7 @@ namespace WebUI
 
         if (path != "/" && !SD.exists(path))
         {
-            sendStatus(404,path + "does not exist on SD Card");
+            sendStatus(404, path + "does not exist on SD Card");
             SD.end();
             set_sd_state(SDState::Idle);
             return;
@@ -1908,7 +1918,7 @@ namespace WebUI
         if (is_authenticated() == AuthenticationLevel::LEVEL_GUEST)
         {
             _upload_status = UploadStatusType::FAILED;
-            sendStatus(401,"Authentication failed");
+            sendStatus(401, "Authentication failed");
             pushError(ESP_ERROR_AUTHENTICATION, "Upload rejected", 401);
         }
         else
