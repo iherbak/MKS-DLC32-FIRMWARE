@@ -657,12 +657,9 @@ namespace WebUI
             else
             {
                 File file = SD.open(filename, "r");
-                char *xRegex = "X(%d+%.*%d*)";
-                char *yRegex = "Y(%d+%.*%d*)";
                 char *lightBurnBoundsRegex = "Bounds: X(%d+%.*%d*) Y(%d+%.*%d*) to X(%d+%.*%d*) Y(%d+%.*%d*)";
                 float minX = 0, maxX = 0, minY = 0, maxY = 0;
                 char buf[10];
-                String allresult;
                 bool lightburnmatch = false;
                 while (file.available() && !lightburnmatch)
                 {
@@ -670,60 +667,57 @@ namespace WebUI
                     // if not comment
                     if (line.charAt(0) != ';')
                     {
-                        MatchState ms;
-                        char dest[line.length()];
-                        strcpy(dest, line.c_str());
-                        ms.Target(dest);
-                        char result = ms.Match(xRegex);
-                        if (result == REGEXP_MATCHED)
+                        int xIndex = line.indexOf("X");
+                        int yIndex = line.indexOf("Y");
+
+                        if (xIndex != -1)
                         {
-                            // we just want the number in level0
-                            char *capture = ms.GetCapture(buf, 0);
-                            float match = atof(capture);
-                            if (match < minX)
+                            float coordinate = getStringCoordinates(xIndex, line);
+                            if (coordinate < minX)
                             {
-                                minX = match;
+                                minX = coordinate;
                             }
-                            if (match > maxX)
+                            if (coordinate > maxX)
                             {
-                                maxX = match;
+                                maxX = coordinate;
                             }
                         }
 
-                        result = ms.Match(yRegex);
-                        if (result == REGEXP_MATCHED)
+                        if (yIndex != -1)
                         {
-                            // we just want the number in level0
-                            char *capture = ms.GetCapture(buf, 0);
-                            float match = atof(capture);
-                            if (match < minY)
+                            float coordinate = getStringCoordinates(yIndex, line);
+
+                            if (coordinate < minY)
                             {
-                                minY = match;
+                                minY = coordinate;
                             }
-                            if (match > maxY)
+                            if (coordinate > maxY)
                             {
-                                maxY = match;
+                                maxY = coordinate;
                             }
                         }
                     }
                     else
                     {
-                        MatchState ms;
-                        char dest[line.length()];
-                        strcpy(dest, line.c_str());
-                        ms.Target(dest);
-                        char result = ms.Match(lightBurnBoundsRegex);
-                        if (result == REGEXP_MATCHED)
+                        if (line.indexOf("Bounds:") != -1)
                         {
-                            char *capture = ms.GetCapture(buf, 0);
-                            minX = atof(capture);
-                            capture = ms.GetCapture(buf, 1);
-                            minY = atof(capture);
-                            capture = ms.GetCapture(buf, 2);
-                            maxX = atof(capture);
-                            capture = ms.GetCapture(buf, 3);
-                            maxY = atof(capture);
-                            lightburnmatch = true;
+                            MatchState ms;
+                            char dest[line.length()];
+                            strcpy(dest, line.c_str());
+                            ms.Target(dest);
+                            char result = ms.Match(lightBurnBoundsRegex);
+                            if (result == REGEXP_MATCHED)
+                            {
+                                char *capture = ms.GetCapture(buf, 0);
+                                minX = strtof(capture, nullptr);
+                                capture = ms.GetCapture(buf, 1);
+                                minY = strtof(capture, nullptr);
+                                capture = ms.GetCapture(buf, 2);
+                                maxX = strtof(capture, nullptr);
+                                capture = ms.GetCapture(buf, 3);
+                                maxY = strtof(capture, nullptr);
+                                lightburnmatch = true;
+                            }
                         }
                     }
                 }
@@ -744,6 +738,16 @@ namespace WebUI
             SD.end();
             set_sd_state(SDState::Idle);
         }
+    }
+
+    float Web_Server::getStringCoordinates(int startpos, const String line)
+    {
+        int numpos = ++startpos;
+        while ((line.charAt(numpos) >= '0' && line.charAt(numpos) <= '9') || line.charAt(numpos) == '.' || line.charAt(numpos) == '-')
+        {
+            numpos++;
+        }
+        return strtof(line.substring(startpos, numpos).c_str(), nullptr);
     }
 
     void Web_Server::handle_fwinfo()
