@@ -3,6 +3,7 @@
 - Other UI-s are not compatible with this firmware because of changes see below
 
 ### Only supporting and tested with a Normal (non-CoreXY) Laser engraver with only X and Y axis ( TwoTrees TT-5.5S) 
+### Does not compatible with MKSLaser application due to api changes
 
 ## Environment construction:
 
