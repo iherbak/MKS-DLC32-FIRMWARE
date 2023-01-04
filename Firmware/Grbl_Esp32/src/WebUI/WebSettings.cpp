@@ -233,55 +233,6 @@ namespace WebUI
         return Error::Ok;
     }
 
-    static Error runLocalFile(char *parameter, AuthenticationLevel auth_level)
-    { // ESP700
-        JSONencoder encoder;
-        encoder.begin();
-        if (sys.state != State::Idle)
-        {
-            encoder.member(JSONencoder::status, "Busy");
-            webPrint(encoder.end().c_str());
-            return Error::IdleError;
-        }
-        String path = trim(parameter);
-        if ((path.length() > 0) && (path[0] != '/'))
-        {
-            path = "/" + path;
-        }
-        if (!SPIFFS.exists(path))
-        {
-            encoder.member(JSONencoder::status, "No such file!");
-            webPrint(encoder.end().c_str());
-            return Error::FsFileNotFound;
-        }
-        File currentfile = SPIFFS.open(path, FILE_READ);
-        if (!currentfile)
-        { // if file open success
-            return Error::FsFailedOpenFile;
-        }
-        // until no line in file
-        Error err;
-        Error accumErr = Error::Ok;
-        uint8_t client = (espresponse) ? espresponse->client() : CLIENT_ALL;
-        while (currentfile.available())
-        {
-            String currentline = currentfile.readStringUntil('\n');
-            if (currentline.length() > 0)
-            {
-                byte line[256];
-                currentline.getBytes(line, 255);
-                err = execute_line((char *)line, client, auth_level);
-                if (err != Error::Ok)
-                {
-                    accumErr = err;
-                }
-                COMMANDS::wait(1);
-            }
-        }
-        currentfile.close();
-        return accumErr;
-    }
-
     static Error showLocalFile(char *parameter, AuthenticationLevel auth_level)
     { // ESP701
         JSONencoder encoder;
@@ -1207,7 +1158,6 @@ namespace WebUI
         new WebCommand(NULL, WEBCMD, WU, "ESP720", "LocalFS/Size", SPIFFSSize);
         new WebCommand("FORMAT", WEBCMD, WA, "ESP710", "LocalFS/Format", formatSpiffs);
         new WebCommand("path", WEBCMD, WU, "ESP701", "LocalFS/Show", showLocalFile);
-        new WebCommand("path", WEBCMD, WU, "ESP700", "LocalFS/Run", runLocalFile);
         new WebCommand("path", WEBCMD, WU, NULL, "LocalFS/ListJSON", listLocalFilesJSON);
 #endif
 #ifdef ENABLE_NOTIFICATIONS
