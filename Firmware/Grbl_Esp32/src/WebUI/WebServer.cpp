@@ -157,6 +157,7 @@ namespace WebUI
         // firmware info as json
         _webserver->on("/firmware", HTTP_GET, handle_fwinfo);
         _webserver->on("/grblsettings", HTTP_GET, handle_grbl_settings);
+        _webserver->on("/espsettings", HTTP_GET, handle_esp_settings);
         // web commands
         _webserver->on("/command", HTTP_ANY, handle_web_command);
         _webserver->on("/espcommand", HTTP_ANY, handle_esp_command);
@@ -810,6 +811,26 @@ namespace WebUI
 
         _webserver->sendHeader("Cache-Control", "no-cache");
         _webserver->send(200, "application/json", encoder.end());
+    }
+
+    void Web_Server::handle_esp_settings()
+    { 
+        JSONencoder encoder;
+        encoder.begin();
+        encoder.begin_array("Settings");
+        for (Setting *js = Setting::List; js; js = js->next())
+        {
+            if (js->getType() == WEBSET && js->getGrblName())
+            {
+                encoder.begin_object();
+                encoder.member("Name", js->getGrblName());
+                encoder.member("Value", js->getStringValue());
+                encoder.end_object();
+            }
+        }
+        encoder.end_array();
+        _webserver->sendHeader("Cache-Control", "no-cache");
+        _webserver->send(200, "application/json", encoder.end().c_str());
     }
 
     void Web_Server::handle_grbl_settings()

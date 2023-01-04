@@ -665,7 +665,6 @@ namespace WebUI
         {
             encoder.member(JSONencoder::status, "Invalid value");
             webPrint(encoder.end().c_str());
-            return Error::InvalidValue;
         }
         char *sval = get_param("V", true);
         const char *spos = get_param("P", false);
@@ -673,9 +672,18 @@ namespace WebUI
         {
             encoder.member(JSONencoder::status, "Missing parameter");
             webPrint(encoder.end().c_str());
-            return Error::InvalidValue;
         }
         Error ret = do_command_or_setting(spos, sval, auth_level, espresponse);
+        if (ret == Error::Ok)
+        {
+            encoder.member(JSONencoder::status, JSONencoder::ok);
+            webPrint(encoder.end().c_str());
+        }
+        else
+        {
+            encoder.member(JSONencoder::status, uint8_t(ret));
+            webPrint(encoder.end().c_str());
+        }
         return ret;
     }
 

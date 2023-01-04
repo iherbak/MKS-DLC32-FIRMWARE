@@ -79,6 +79,7 @@ namespace WebUI {
         static void handle_login();
         static void handle_fwinfo();
         static void handle_grbl_settings();
+        static void handle_esp_settings();
         static void handle_not_found();
         static void _handle_web_command(bool);
         static void _handle_esp_command(bool);
