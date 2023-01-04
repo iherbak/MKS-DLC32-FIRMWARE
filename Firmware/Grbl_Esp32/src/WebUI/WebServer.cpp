@@ -579,7 +579,6 @@ namespace WebUI
         }
         // if it is internal command [ESPXXX]<parameter>
         cmd.trim();
-        // grbl_msg_sendf(CLIENT_SERIAL, MsgLevel::Info, _webserver->urlDecode(cmd).c_str());
         int ESPpos = cmd.indexOf("[ESP");
         if (ESPpos > -1)
         {
@@ -814,7 +813,7 @@ namespace WebUI
     }
 
     void Web_Server::handle_esp_settings()
-    { 
+    {
         JSONencoder encoder;
         encoder.begin();
         encoder.begin_array("Settings");

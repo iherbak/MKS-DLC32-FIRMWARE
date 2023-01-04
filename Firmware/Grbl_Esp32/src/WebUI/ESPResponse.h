@@ -36,12 +36,10 @@ namespace WebUI {
         ESPResponseStream();
 
         void          sendJson(const char* data);
-        bool          anyOutput() { return _header_sent; }
         static String formatBytes(uint64_t bytes);
         uint8_t       client() { return _client; }
 
     private:
         uint8_t _client;
-        bool    _header_sent;
     };
 }

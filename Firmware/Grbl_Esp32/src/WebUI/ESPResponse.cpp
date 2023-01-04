@@ -29,7 +29,6 @@ namespace WebUI
 #if defined(ENABLE_HTTP) && defined(ENABLE_WIFI)
     ESPResponseStream::ESPResponseStream(WebServer *webserver)
     {
-        _header_sent = false;
         _webserver = webserver;
         _client = CLIENT_WEBUI;
     }
@@ -39,7 +38,6 @@ namespace WebUI
     {
         _client = CLIENT_INPUT;
 #if defined(ENABLE_HTTP) && defined(ENABLE_WIFI)
-        _header_sent = false;
         _webserver = NULL;
 #endif
     }
@@ -49,7 +47,6 @@ namespace WebUI
         (void)byid; // fake parameter to avoid confusion with pointer one (NULL == 0)
         _client = client;
 #if defined(ENABLE_HTTP) && defined(ENABLE_WIFI)
-        _header_sent = false;
         _webserver = NULL;
 #endif
     }
@@ -84,13 +81,8 @@ namespace WebUI
 #if defined(ENABLE_HTTP) && defined(ENABLE_WIFI)
         if (_webserver)
         {
-            if (!_header_sent)
-            {
-                _webserver->sendHeader("Content-Type", "application/json");
-                _webserver->sendHeader("Cache-Control", "no-cache");
-                _webserver->send(200, data);
-                _header_sent = true;
-            }
+            _webserver->sendHeader("Cache-Control", "no-cache");
+            _webserver->send(200, "application/json", data);
             return;
         }
 #endif
