@@ -1,0 +1,1 @@
+esptool --port COM3 --baud 115200 read_flash 0x10000 0x300000 f.bin 

@@ -86,6 +86,7 @@
 #define SPINDLE_TYPE                SpindleType::LASER 
 #ifdef USE_BOARD_V2_0
 #define SPINDLE_OUTPUT_PIN          GPIO_NUM_32
+#define LASER_ENABLE_PIN            I2SO(7)
 #else 
 #define SPINDLE_OUTPUT_PIN          GPIO_NUM_22
 #endif
@@ -111,7 +112,7 @@
 #define LCD_RST					    GPIO_NUM_27     
 #define LCD_CS					    GPIO_NUM_25
 #define TOUCH_CS				    GPIO_NUM_26
-#define BEEPER					    I2SO(7)
+//#define BEEPER					    I2SO(7)
 
 #define IIC_SCL                     GPIO_NUM_4
 #define IIC_SDA                     GPIO_NUM_0
@@ -128,7 +129,7 @@
 
 // === Default settings
 // #define DEFAULT_STEP_PULSE_MICROSECONDS I2S_OUT_USEC_PER_PULSE
-#define DEFAULT_STEP_PULSE_MICROSECONDS     6
+#define DEFAULT_STEP_PULSE_MICROSECONDS     10
 
 #define DEFAULT_STEPPER_IDLE_LOCK_TIME      25
 
@@ -181,7 +182,7 @@
 #define DEFAULT_Y_MAX_TRAVEL 450.0 // mm NOTE: Must be a positive value.
 #define DEFAULT_Z_MAX_TRAVEL 50.0 // mm NOTE: Must be a positive value.
 
-#define DEFAULT_SPINDLE_FREQ        1920// 8000.0   // 1KHz
+#define DEFAULT_SPINDLE_FREQ        5000
 #define DEFAULT_LASER_FULL_POWER    1000
 #define DEFAULT_SPINDLE_MAX_VALUE   1000    
 #define DEFAULT_SPINDLE_MIN_VALUE   0
