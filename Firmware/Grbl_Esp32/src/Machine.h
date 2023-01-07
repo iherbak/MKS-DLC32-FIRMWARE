@@ -20,6 +20,7 @@
 // supplied automatically.
 
 // MACHINE_PATHNAME_QUOTED constructs a path that is suitable for #include
-#define MACHINE_PATHNAME_QUOTED(name) <src/Machines/name>
+//#define MACHINE_PATHNAME_QUOTED(name) <src/Machines/name>
 
-#include MACHINE_PATHNAME_QUOTED(MACHINE_FILENAME)
+//#include MACHINE_PATHNAME_QUOTED(MACHINE_FILENAME)
+#include "Machines/i2s_out_xyz_mks_dlc32.h"

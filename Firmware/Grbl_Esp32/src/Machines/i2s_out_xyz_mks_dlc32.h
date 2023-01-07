@@ -85,10 +85,9 @@
 // Laser pin set
 #define SPINDLE_TYPE                SpindleType::LASER 
 #ifdef USE_BOARD_V2_0
-#define SPINDLE_OUTPUT_PIN          GPIO_NUM_32
-#define LASER_ENABLE_PIN            I2SO(7)
+#define LASER_OUTPUT_PIN          GPIO_NUM_32
 #else 
-#define SPINDLE_OUTPUT_PIN          GPIO_NUM_22
+#define SPINDLE_OUTPUT_PIN          GPIO_NUM_32
 #endif
 
 #define X_LIMIT_PIN                 GPIO_NUM_36
@@ -112,7 +111,7 @@
 #define LCD_RST					    GPIO_NUM_27     
 #define LCD_CS					    GPIO_NUM_25
 #define TOUCH_CS				    GPIO_NUM_26
-//#define BEEPER					    I2SO(7)
+#define BEEPER					    I2SO(7)
 
 #define IIC_SCL                     GPIO_NUM_4
 #define IIC_SDA                     GPIO_NUM_0
@@ -182,7 +181,7 @@
 #define DEFAULT_Y_MAX_TRAVEL 450.0 // mm NOTE: Must be a positive value.
 #define DEFAULT_Z_MAX_TRAVEL 50.0 // mm NOTE: Must be a positive value.
 
-#define DEFAULT_SPINDLE_FREQ        5000
+#define DEFAULT_SPINDLE_FREQ        1000
 #define DEFAULT_LASER_FULL_POWER    1000
 #define DEFAULT_SPINDLE_MAX_VALUE   1000    
 #define DEFAULT_SPINDLE_MIN_VALUE   0
