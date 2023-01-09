@@ -81,15 +81,6 @@ namespace WebUI
         "interval=setInterval(function(){\ni=i+1; \nvar x = document.getElementById(\"prg\"); \nx.value=i; \nif (i>5) "
         "\n{\nclearInterval(interval);\nwindow.location.href='/';\n}\n},1000);\n</script>\n</CENTER>\n</BODY>\n</HTML>\n\n";
 
-    // Error codes for upload
-    const int ESP_ERROR_AUTHENTICATION = 1;
-    const int ESP_ERROR_FILE_CREATION = 2;
-    const int ESP_ERROR_FILE_WRITE = 3;
-    const int ESP_ERROR_UPLOAD = 4;
-    const int ESP_ERROR_NOT_ENOUGH_SPACE = 5;
-    const int ESP_ERROR_UPLOAD_CANCELLED = 6;
-    const int ESP_ERROR_FILE_CLOSE = 7;
-
     Web_Server web_server;
     bool Web_Server::_setupdone = false;
     uint16_t Web_Server::_port = 0;
@@ -1302,11 +1293,11 @@ namespace WebUI
     }
 
     // push error code and message to websocket
-    void Web_Server::pushError(int code, const char *st, bool web_error, uint16_t timeout)
+    void Web_Server::pushError(UploadError code, const char *st, bool web_error, uint16_t timeout)
     {
         if (_socket_server && st)
         {
-            String s = "ERROR:" + String(code) + ":";
+            String s = "ERROR:" + String(static_cast<int>(code)) + ":";
             s += st;
             _socket_server->sendTXT(_id_connection, s);
             if (web_error != 0 && _webserver && _webserver->client().available() > 0)
@@ -1349,7 +1340,7 @@ namespace WebUI
         {
             _upload_status = UploadStatusType::FAILED;
             grbl_send(CLIENT_ALL, "[MSG:Upload rejected]\r\n");
-            pushError(ESP_ERROR_AUTHENTICATION, "Upload rejected", 401);
+            pushError(UploadError::ESP_ERROR_AUTHENTICATION, "Upload rejected", 401);
         }
         else
         {
@@ -1395,7 +1386,7 @@ namespace WebUI
                         {
                             _upload_status = UploadStatusType::FAILED;
                             grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
-                            pushError(ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space", 507);
+                            pushError(UploadError::ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space", 507);
                         }
                     }
 
@@ -1414,7 +1405,7 @@ namespace WebUI
                             // if no set cancel flag
                             _upload_status = UploadStatusType::FAILED;
                             grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
-                            pushError(ESP_ERROR_FILE_CREATION, "File creation failed", 500);
+                            pushError(UploadError::ESP_ERROR_FILE_CREATION, "File creation failed", 500);
                         }
                     }
                     // Upload write
@@ -1431,7 +1422,7 @@ namespace WebUI
                         {
                             _upload_status = UploadStatusType::FAILED;
                             grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
-                            pushError(ESP_ERROR_FILE_WRITE, "File write failed", 500);
+                            pushError(UploadError::ESP_ERROR_FILE_WRITE, "File write failed", 500);
                         }
                     }
                     else
@@ -1439,7 +1430,7 @@ namespace WebUI
                         // we have a problem set flag UploadStatusType::FAILED
                         _upload_status = UploadStatusType::FAILED;
                         grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
-                        pushError(ESP_ERROR_FILE_WRITE, "File write failed", 500);
+                        pushError(UploadError::ESP_ERROR_FILE_WRITE, "File write failed", 500);
                     }
                     // Upload end
                     //**************
@@ -1469,14 +1460,14 @@ namespace WebUI
                         else
                         {
                             grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
-                            pushError(ESP_ERROR_UPLOAD, "File upload failed", 500);
+                            pushError(UploadError::ESP_ERROR_UPLOAD, "File upload failed", 500);
                         }
                     }
                     else
                     {
                         // we have a problem set flag UploadStatusType::FAILED
                         _upload_status = UploadStatusType::FAILED;
-                        pushError(ESP_ERROR_FILE_CLOSE, "File close failed", 500);
+                        pushError(UploadError::ESP_ERROR_FILE_CLOSE, "File close failed", 500);
                         grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
                     }
                     // Upload cancelled
@@ -1538,7 +1529,7 @@ namespace WebUI
         {
             _upload_status = UploadStatusType::FAILED;
             grbl_send(CLIENT_ALL, "[MSG:Upload rejected]\r\n");
-            pushError(ESP_ERROR_AUTHENTICATION, "Upload rejected", 401);
+            pushError(UploadError::ESP_ERROR_AUTHENTICATION, "Upload rejected", 401);
         }
         else
         {
@@ -1569,7 +1560,7 @@ namespace WebUI
                     }
                     if (flashsize < maxSketchSpace)
                     {
-                        pushError(ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space", 507);
+                        pushError(UploadError::ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space", 507);
                         _upload_status = UploadStatusType::FAILED;
                         grbl_send(CLIENT_ALL, "[MSG:Update cancelled]\r\n");
                     }
@@ -1580,7 +1571,7 @@ namespace WebUI
                         { // start with max available size
                             _upload_status = UploadStatusType::FAILED;
                             grbl_send(CLIENT_ALL, "[MSG:Update cancelled]\r\n");
-                            pushError(ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space", 507);
+                            pushError(UploadError::ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space", 507);
                         }
                         else
                         {
@@ -1616,7 +1607,7 @@ namespace WebUI
                         {
                             _upload_status = UploadStatusType::FAILED;
                             grbl_send(CLIENT_ALL, "[MSG:Update write failed]\r\n");
-                            pushError(ESP_ERROR_FILE_WRITE, "File write failed", 500);
+                            pushError(UploadError::ESP_ERROR_FILE_WRITE, "File write failed", 500);
                         }
                     }
                     // Upload end
@@ -1634,7 +1625,7 @@ namespace WebUI
                     {
                         _upload_status = UploadStatusType::FAILED;
                         grbl_send(CLIENT_ALL, "[MSG:Update failed]\r\n");
-                        pushError(ESP_ERROR_UPLOAD, "Update upload failed", 500);
+                        pushError(UploadError::ESP_ERROR_UPLOAD, "Update upload failed", 500);
                     }
                 }
                 else if (upload.status == UPLOAD_FILE_ABORTED)
@@ -1943,7 +1934,7 @@ namespace WebUI
         {
             _upload_status = UploadStatusType::FAILED;
             sendStatus(401, "Authentication failed");
-            pushError(ESP_ERROR_AUTHENTICATION, "Upload rejected", 401);
+            pushError(UploadError::ESP_ERROR_AUTHENTICATION, "Upload rejected", 401);
         }
         else
         {
@@ -1967,7 +1958,7 @@ namespace WebUI
                     {
                         _upload_status = UploadStatusType::FAILED;
                         grbl_send(CLIENT_ALL, "[MSG:Upload cancelled]\r\n");
-                        pushError(ESP_ERROR_UPLOAD_CANCELLED, "Upload cancelled", 500);
+                        pushError(UploadError::ESP_ERROR_UPLOAD_CANCELLED, "Upload cancelled", 500);
                     }
                     else
                     {
@@ -1986,7 +1977,7 @@ namespace WebUI
                             {
                                 _upload_status = UploadStatusType::FAILED;
                                 grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
-                                pushError(ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space", 507);
+                                pushError(UploadError::ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space", 507);
                             }
                         }
                         if (_upload_status != UploadStatusType::FAILED)
@@ -1999,7 +1990,7 @@ namespace WebUI
                                 // if creation failed
                                 _upload_status = UploadStatusType::FAILED;
                                 grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
-                                pushError(ESP_ERROR_FILE_CREATION, "File creation failed", 500);
+                                pushError(UploadError::ESP_ERROR_FILE_CREATION, "File creation failed", 500);
                             }
                             // if creation succeed set flag UploadStatusType::ONGOING
                             else
@@ -2021,14 +2012,14 @@ namespace WebUI
                         {
                             _upload_status = UploadStatusType::FAILED;
                             grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
-                            pushError(ESP_ERROR_FILE_WRITE, "File write failed", 500);
+                            pushError(UploadError::ESP_ERROR_FILE_WRITE, "File write failed", 500);
                         }
                     }
                     else
                     { // if error set flag UploadStatusType::FAILED
                         _upload_status = UploadStatusType::FAILED;
                         grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
-                        pushError(ESP_ERROR_FILE_WRITE, "File write failed", 500);
+                        pushError(UploadError::ESP_ERROR_FILE_WRITE, "File write failed", 500);
                     }
                     // Upload end
                     //**************
@@ -2050,7 +2041,7 @@ namespace WebUI
                             if (_webserver->arg(sizeargname) != String(filesize))
                             {
                                 _upload_status = UploadStatusType::FAILED;
-                                pushError(ESP_ERROR_UPLOAD, "File upload mismatch", 500);
+                                pushError(UploadError::ESP_ERROR_UPLOAD, "File upload mismatch", 500);
                                 grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
                             }
                         }
@@ -2059,7 +2050,7 @@ namespace WebUI
                     {
                         _upload_status = UploadStatusType::FAILED;
                         grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
-                        pushError(ESP_ERROR_FILE_CLOSE, "File close failed", 500);
+                        pushError(UploadError::ESP_ERROR_FILE_CLOSE, "File close failed", 500);
                     }
                     if (_upload_status == UploadStatusType::ONGOING)
                     {
@@ -2069,7 +2060,7 @@ namespace WebUI
                     else
                     {
                         _upload_status = UploadStatusType::FAILED;
-                        pushError(ESP_ERROR_UPLOAD, "Upload error", 500);
+                        pushError(UploadError::ESP_ERROR_UPLOAD, "Upload error", 500);
                     }
                 }
                 else

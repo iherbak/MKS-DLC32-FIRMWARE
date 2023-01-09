@@ -22,6 +22,7 @@
 
 #include "../Config.h"
 #include "Commands.h"
+#include "UploadError.h"
 
 class WebSocketsServer;
 class WebServer;
@@ -93,7 +94,7 @@ namespace WebUI {
         static void handleFileList();
         static void handleUpdate();
         static void WebUpdateUpload();
-        static void pushError(int code, const char* st, bool web_error = 500, uint16_t timeout = 1000);
+        static void pushError(UploadError code, const char* st, bool web_error = 500, uint16_t timeout = 1000);
         static void sendStatus(int httpCode, String status);
         static void cancelUpload();
 #ifdef ENABLE_SD_CARD
