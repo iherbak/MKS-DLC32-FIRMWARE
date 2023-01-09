@@ -191,7 +191,6 @@ Error WebCommand::action(char *value, WebUI::AuthenticationLevel auth_level, Web
         value = &empty;
     }
     WebUI::espresponse = out;
-    grbl_sendf(CLIENT_SERIAL,"Base action is getting stream");
     return _action(value, auth_level);
 };
 

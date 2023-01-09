@@ -85,7 +85,7 @@
 // Laser pin set
 #define SPINDLE_TYPE                SpindleType::LASER 
 #ifdef USE_BOARD_V2_0
-#define LASER_OUTPUT_PIN          GPIO_NUM_32
+#define LASER_OUTPUT_PIN            GPIO_NUM_32
 #else 
 #define SPINDLE_OUTPUT_PIN          GPIO_NUM_32
 #endif
