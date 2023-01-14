@@ -23,7 +23,7 @@
 // Grbl versioning system
 const char* const GRBL_VERSION       = "1.1";
 // const char* const GRBL_VERSION       = "1.3a";
-const char* const GRBL_VERSION_BUILD = "2022042101";
+const char* const GRBL_VERSION_BUILD = "20230113 (DLC32_V2.x Laser 2 axis)";
 
 //#include <sdkconfig.h>
 #include <Arduino.h>

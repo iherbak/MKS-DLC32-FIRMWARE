@@ -57,5 +57,3 @@ bool limitsCheckTravel(float* target);
 
 // check if a switch has been defined
 bool limitsSwitchDefined(uint8_t axis, uint8_t gang_index);
-
-void limitsCheckSoft(float* target);

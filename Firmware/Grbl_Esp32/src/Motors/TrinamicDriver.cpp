@@ -54,9 +54,9 @@ namespace Motors {
         _spi_index(spi_index) {
         _has_errors = false;
         if (_driver_part_number == 2130) {
-            tmc2130 = new TMC2130Stepper(_cs_pin, _r_sense, _spi_index);
+            tmcstepper = new TMC2130Stepper(_cs_pin, _r_sense, _spi_index);
         } else if (_driver_part_number == 5160) {
-            tmc5160 = new TMC5160Stepper(_cs_pin, _r_sense, _spi_index);
+            tmcstepper = new TMC5160Stepper(_cs_pin, _r_sense, _spi_index);
         } else {
             grbl_msg_sendf(CLIENT_SERIAL,
                            MsgLevel::Info,
@@ -67,14 +67,14 @@ namespace Motors {
             return;
         }
 
-        _has_errors = false;
+        _has_errors = false;       
 
         digitalWrite(_cs_pin, HIGH);
         pinMode(_cs_pin, OUTPUT);
 
         // use slower speed if I2S
         if (_cs_pin >= I2S_OUT_PIN_BASE) {
-            (tmc2130) ? tmc2130->setSPISpeed(TRINAMIC_SPI_FREQ) : tmc5160->setSPISpeed(TRINAMIC_SPI_FREQ);
+            tmcstepper->setSPISpeed(TRINAMIC_SPI_FREQ);
         }
 
         link = List;
@@ -98,7 +98,7 @@ namespace Motors {
 
         SPI.begin();  // this will get called for each motor, but does not seem to hurt anything
 
-        (tmc2130) ? tmc2130->begin() : tmc5160->begin();
+        tmcstepper->begin();
 
         _has_errors = !test();  // Try communicating with motor. Prints an error if there is a problem.
 
@@ -142,10 +142,7 @@ namespace Motors {
         if (_has_errors) {
             return false;
         }
-
-        uint8_t result = tmc2130 ? tmc2130->test_connection() : tmc5160->test_connection();
-
-        switch (result) {
+        switch (tmcstepper->test_connection()) {
             case 1:
                 grbl_msg_sendf(CLIENT_SERIAL,
                                MsgLevel::Info,
@@ -162,8 +159,7 @@ namespace Motors {
                 // driver responded, so check for other errors from the DRV_STATUS register
 
                 TMC2130_n ::DRV_STATUS_t status { 0 };  // a useful struct to access the bits.
-
-                status.sr = tmc2130 ? tmc2130->DRV_STATUS() : tmc5160->DRV_STATUS();
+                status.sr = tmcstepper->DRV_STATUS();
 
                 bool err = false;
 
@@ -212,13 +208,8 @@ namespace Motors {
             if (hold_i_percent > 1.0)
                 hold_i_percent = 1.0;
         }
-        if (tmc2130) {
-            tmc2130->microsteps(axis_settings[_axis_index]->microsteps->get());
-            tmc2130->rms_current(run_i_ma, hold_i_percent);
-        } else {
-            tmc5160->microsteps(axis_settings[_axis_index]->microsteps->get());
-            tmc5160->rms_current(run_i_ma, hold_i_percent);
-        }
+        tmcstepper->microsteps(axis_settings[_axis_index]->microsteps->get());
+        tmcstepper->rms_current(run_i_ma, hold_i_percent);
 
         init_step_dir_pins();
     }
@@ -245,65 +236,33 @@ namespace Motors {
         }
         _mode = newMode;
 
-        if (tmc2130) {
-            switch (_mode) {
-                case TrinamicMode ::StealthChop:
-                    //grbl_msg_sendf(CLIENT_SERIAL, MsgLevel::Info, "StealthChop");
-                    tmc2130->en_pwm_mode(true);
-                    tmc2130->pwm_autoscale(true);
-                    tmc2130->diag1_stall(false);
-                    break;
-                case TrinamicMode ::CoolStep:
-                    //grbl_msg_sendf(CLIENT_SERIAL, MsgLevel::Info, "Coolstep");
-                    tmc2130->en_pwm_mode(false);
-                    tmc2130->pwm_autoscale(false);
-                    tmc2130->TCOOLTHRS(NORMAL_TCOOLTHRS);  // when to turn on coolstep
-                    tmc2130->THIGH(NORMAL_THIGH);
-                    break;
-                case TrinamicMode ::StallGuard:
-                    //grbl_msg_sendf(CLIENT_SERIAL, MsgLevel::Info, "Stallguard");
-                    tmc2130->en_pwm_mode(false);
-                    tmc2130->pwm_autoscale(false);
-                    tmc2130->TCOOLTHRS(calc_tstep(homing_feed_rate->get(), 150.0));
-                    tmc2130->THIGH(calc_tstep(homing_feed_rate->get(), 60.0));
-                    tmc2130->sfilt(1);
-                    tmc2130->diag1_stall(true);  // stallguard i/o is on diag1
-                    tmc2130->sgt(constrain(axis_settings[_axis_index]->stallguard->get(), -64, 63));
-                    break;
-                default:
-                    grbl_msg_sendf(CLIENT_SERIAL, MsgLevel::Info, "TRINAMIC_MODE_UNDEFINED");
-            }
-        } else {
-            switch (_mode) {
-                case TrinamicMode ::StealthChop:
-                    //grbl_msg_sendf(CLIENT_SERIAL, MsgLevel::Info, "StealthChop");
-                    tmc5160->en_pwm_mode(true);
-                    tmc5160->pwm_autoscale(true);
-                    tmc5160->diag1_stall(false);
-                    break;
-                case TrinamicMode ::CoolStep:
-                    //grbl_msg_sendf(CLIENT_SERIAL, MsgLevel::Info, "Coolstep");
-                    tmc5160->en_pwm_mode(false);
-                    tmc5160->pwm_autoscale(false);
-                    tmc5160->TCOOLTHRS(NORMAL_TCOOLTHRS);  // when to turn on coolstep
-                    tmc5160->THIGH(NORMAL_THIGH);
-                    break;
-                case TrinamicMode ::StallGuard:
-                    //grbl_msg_sendf(CLIENT_SERIAL, MsgLevel::Info, "Stallguard");
-                    tmc5160->en_pwm_mode(false);
-                    tmc5160->pwm_autoscale(false);
-                    tmc5160->TCOOLTHRS(calc_tstep(homing_feed_rate->get(), 150.0));
-                    tmc5160->THIGH(calc_tstep(homing_feed_rate->get(), 60.0));
-                    tmc5160->sfilt(1);
-                    tmc5160->diag1_stall(true);  // stallguard i/o is on diag1
-                    tmc5160->sgt(constrain(axis_settings[_axis_index]->stallguard->get(), -64, 63));
-                    break;
-                default:
-                    grbl_msg_sendf(CLIENT_SERIAL, MsgLevel::Info, "TRINAMIC_MODE_UNDEFINED");
-            }
+        switch (_mode) {
+            case TrinamicMode ::StealthChop:
+                //grbl_msg_sendf(CLIENT_SERIAL, MsgLevel::Info, "StealthChop");
+                tmcstepper->en_pwm_mode(true);
+                tmcstepper->pwm_autoscale(true);
+                tmcstepper->diag1_stall(false);
+                break;
+            case TrinamicMode ::CoolStep:
+                //grbl_msg_sendf(CLIENT_SERIAL, MsgLevel::Info, "Coolstep");
+                tmcstepper->en_pwm_mode(false);
+                tmcstepper->pwm_autoscale(false);
+                tmcstepper->TCOOLTHRS(NORMAL_TCOOLTHRS);  // when to turn on coolstep
+                tmcstepper->THIGH(NORMAL_THIGH);
+                break;
+            case TrinamicMode ::StallGuard:
+                //grbl_msg_sendf(CLIENT_SERIAL, MsgLevel::Info, "Stallguard");
+                tmcstepper->en_pwm_mode(false);
+                tmcstepper->pwm_autoscale(false);
+                tmcstepper->TCOOLTHRS(calc_tstep(homing_feed_rate->get(), 150.0));
+                tmcstepper->THIGH(calc_tstep(homing_feed_rate->get(), 60.0));
+                tmcstepper->sfilt(1);
+                tmcstepper->diag1_stall(true);  // stallguard i/o is on diag1
+                tmcstepper->sgt(constrain(axis_settings[_axis_index]->stallguard->get(), -64, 63));
+                break;
+            default:
+                grbl_msg_sendf(CLIENT_SERIAL, MsgLevel::Info, "TRINAMIC_MODE_UNDEFINED");
         }
-
-        
     }
 
     /*
@@ -313,27 +272,24 @@ namespace Motors {
         if (_has_errors) {
             return;
         }
-        uint32_t tstep = (tmc2130) ? tmc2130->TSTEP() : tmc5160->TSTEP();
+        uint32_t tstep = tmcstepper->TSTEP();
 
         if (tstep == 0xFFFFF || tstep < 1) {  // if axis is not moving return
             return;
         }
         float feedrate = st_get_realtime_rate();  //* settings.microsteps[axis_index] / 60.0 ; // convert mm/min to Hz
 
-        int32_t st = (tmc2130) ? tmc2130->stallguard() : tmc5160->stallguard();
-        int32_t sg = (tmc2130) ? tmc2130->sg_result() : tmc5160->sg_result();
-
         grbl_msg_sendf(CLIENT_SERIAL,
                        MsgLevel::Info,
                        "%s Stallguard %d   SG_Val: %04d   Rate: %05.0f mm/min SG_Setting:%d",
                        reportAxisNameMsg(_axis_index, _dual_axis_index),
-                       st,
-                       sg,
+                       tmcstepper->stallguard(),
+                       tmcstepper->sg_result(),
                        feedrate,
                        constrain(axis_settings[_axis_index]->stallguard->get(), -64, 63));
 
         TMC2130_n ::DRV_STATUS_t status { 0 };  // a useful struct to access the bits.
-        status.sr = (tmc2130) ? tmc2130->DRV_STATUS() : tmc5160->DRV_STATUS();
+        status.sr = tmcstepper->DRV_STATUS();
 
         // these only report if there is a fault condition
         report_open_load(status);

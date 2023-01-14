@@ -135,7 +135,7 @@
 #endif
 
 #ifndef DEFAULT_HOMING_CYCLE_1
-#    define DEFAULT_HOMING_CYCLE_1 (bit(X_AXIS) | bit(Y_AXIS))
+#    define DEFAULT_HOMING_CYCLE_1 (bit(X_AXIS) | bit(Y_AXIS)) 
 #endif
 
 #ifndef DEFAULT_HOMING_CYCLE_2

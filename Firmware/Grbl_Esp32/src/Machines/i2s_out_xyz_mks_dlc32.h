@@ -159,7 +159,7 @@
 #ifdef USE_SPINDLE_RELAY
     #define DEFAULT_SPINDLE_RPM_MAX 1.0 // must be 1 so PWM duty is alway 100% to prevent relay damage
 #else
-    #define DEFAULT_SPINDLE_RPM_MAX 10000.0 // can be change to your spindle max
+    #define DEFAULT_SPINDLE_RPM_MAX 1000.0 // can be change to your spindle max
 #endif
 #define DEFAULT_SPINDLE_RPM_MIN 0.0 // rpm
 
