@@ -26,7 +26,7 @@
 #include "ESPResponse.h"
 #include "Serial2Socket.h"
 #include "WebServer.h"
-#include <WebSocketsServer.h>
+#include "WebSocketsServer.h"
 #include <WiFi.h>
 #include <FS.h>
 #include <SPIFFS.h>

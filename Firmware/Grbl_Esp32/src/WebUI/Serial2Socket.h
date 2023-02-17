@@ -22,8 +22,7 @@
 
 #include <Print.h>
 #include <cstring>
-
-class WebSocketsServer;
+#include "WebSocketsServer.h"
 
 namespace WebUI {
     class Serial_2_Socket : public Print {

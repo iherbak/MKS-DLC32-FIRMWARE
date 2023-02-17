@@ -23,8 +23,8 @@
 #include "../Config.h"
 #include "Commands.h"
 #include "UploadError.h"
+#include "WebSocketsServer.h"
 
-class WebSocketsServer;
 class WebServer;
 
 namespace WebUI {
@@ -59,7 +59,7 @@ namespace WebUI {
         static void handle_root();
         static void handle_fwinfo();
         static void handle_grbl_settings();
-        static void handle_esp_settings();
+        static void handle_esp_settings(); 
         static void handle_not_found();
         static void _handle_web_command(bool);
         static void _handle_esp_command(bool);
