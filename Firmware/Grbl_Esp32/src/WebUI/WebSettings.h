@@ -52,11 +52,6 @@ namespace WebUI {
     extern StringSetting* bt_name;
 #endif
 
-#ifdef ENABLE_AUTHENTICATION
-    extern StringSetting* user_password;
-    extern StringSetting* admin_password;
-#endif
-
 #ifdef ENABLE_NOTIFICATIONS
     extern EnumSetting*   notification_type;
     extern StringSetting* notification_t1;

@@ -41,7 +41,6 @@ const char* const GRBL_VERSION_BUILD = "20230113 (DLC32_V2.x Laser 2 axis)";
 
 #include "Defaults.h"
 #include "Error.h"
-#include "WebUI/Authentication.h"
 #include "WebUI/Commands.h"
 #include "Probe.h"
 #include "System.h"

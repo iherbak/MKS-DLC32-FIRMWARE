@@ -178,7 +178,7 @@ namespace WebUI
     }
 }
 
-Error WebCommand::action(char *value, WebUI::AuthenticationLevel auth_level, WebUI::ESPResponseStream *out)
+Error WebCommand::action(char *value, WebUI::ESPResponseStream *out)
 {
 
     if (_cmdChecker && _cmdChecker())
@@ -191,7 +191,7 @@ Error WebCommand::action(char *value, WebUI::AuthenticationLevel auth_level, Web
         value = &empty;
     }
     WebUI::espresponse = out;
-    return _action(value, auth_level);
+    return _action(value);
 };
 
 namespace WebUI
@@ -206,7 +206,7 @@ namespace WebUI
             espresponse->sendJson(s);
         }
     }
-    static Error SPIFFSSize(char *parameter, AuthenticationLevel auth_level)
+    static Error SPIFFSSize(char *parameter)
     { // ESP720
         JSONencoder encoder;
         encoder.begin();
@@ -216,7 +216,7 @@ namespace WebUI
         return Error::Ok;
     }
 
-    static Error formatSpiffs(char *parameter, AuthenticationLevel auth_level)
+    static Error formatSpiffs(char *parameter)
     { // ESP710
         JSONencoder encoder;
         encoder.begin();
@@ -232,7 +232,7 @@ namespace WebUI
         return Error::Ok;
     }
 
-    static Error showLocalFile(char *parameter, AuthenticationLevel auth_level)
+    static Error showLocalFile(char *parameter)
     { // ESP701
         JSONencoder encoder;
         encoder.begin();
@@ -271,7 +271,7 @@ namespace WebUI
     }
 
 #ifdef ENABLE_NOTIFICATIONS
-    static Error showSetNotification(char *parameter, AuthenticationLevel auth_level)
+    static Error showSetNotification(char *parameter)
     { // ESP610
         JSONEncoder encoder;
         encoder.begin();
@@ -310,7 +310,7 @@ namespace WebUI
         return err;
     }
 
-    static Error sendMessage(char *parameter, AuthenticationLevel auth_level)
+    static Error sendMessage(char *parameter)
     { // ESP600
         JSONencoder encoder;
         encode.beging();
@@ -332,32 +332,7 @@ namespace WebUI
     }
 #endif
 
-#ifdef ENABLE_AUTHENTICATION
-    static Error setUserPassword(char *parameter, AuthenticationLevel auth_level)
-    { // ESP555
-        JSONencoder encoder;
-        encode.beging();
-        if (*parameter == '\0')
-        {
-            user_password->setDefault();
-            encoder.member(JSONencoder::status, JSONencoder::ok);
-            webPrint(encoder.end().c_str());
-            return Error::Ok;
-        }
-        if (user_password->setStringValue(parameter) != Error::Ok)
-        {
-            encoder.member(JSONencoder::status, "Invalid password");
-            webPrint(encoder.end().c_str());
-            return Error::InvalidValue;
-        }
-        encoder.member(JSONencoder::status, JSONencoder::ok);
-        webPrint(encoder.end().c_str());
-
-        return Error::Ok;
-    }
-#endif
-
-    static Error setSystemMode(char *parameter, AuthenticationLevel auth_level)
+    static Error setSystemMode(char *parameter)
     { // ESP444
         JSONencoder encoder;
         encoder.begin();
@@ -373,7 +348,7 @@ namespace WebUI
         return Error::Ok;
     }
 
-    static Error showSysStats(char *parameter, AuthenticationLevel auth_level)
+    static Error showSysStats(char *parameter)
     { // ESP420
         JSONencoder encoder;
         encoder.begin();
@@ -565,7 +540,7 @@ namespace WebUI
     }
 
 #ifdef ENABLE_WIFI
-    static Error listAPs(char *parameter, AuthenticationLevel auth_level)
+    static Error listAPs(char *parameter)
     { // ESP410
         JSONencoder j(espresponse->client() != CLIENT_WEBUI);
         j.begin();
@@ -606,7 +581,7 @@ namespace WebUI
     }
 #endif
 
-    static Error setWebSetting(char *parameter, AuthenticationLevel auth_level)
+    static Error setWebSetting(char *parameter)
     { // ESP401
         // We do not need the "T=" (type) parameter because the
         // Setting objects know their own type
@@ -624,7 +599,7 @@ namespace WebUI
             encoder.member(JSONencoder::status, "Missing parameter");
             webPrint(encoder.end().c_str());
         }
-        Error ret = do_command_or_setting(spos, sval, auth_level, espresponse);
+        Error ret = do_command_or_setting(spos, sval, espresponse);
         if (ret == Error::Ok)
         {
             encoder.member(JSONencoder::status, JSONencoder::ok);
@@ -638,7 +613,7 @@ namespace WebUI
         return ret;
     }
 
-    static Error listSettings(char *parameter, AuthenticationLevel auth_level)
+    static Error listSettings(char *parameter)
     { // ESP400
         JSONencoder j(espresponse->client() != CLIENT_WEBUI);
         j.begin();
@@ -700,7 +675,7 @@ namespace WebUI
         return Error::Ok;
     }
 
-    static Error showSDFile(char *parameter, AuthenticationLevel auth_level)
+    static Error showSDFile(char *parameter)
     { // ESP221
         if (sys.state != State::Idle && sys.state != State::Alarm)
         {
@@ -728,7 +703,7 @@ namespace WebUI
         return Error::Ok;
     }
 
-    static Error runSDFile(char *parameter, AuthenticationLevel auth_level)
+    static Error runSDFile(char *parameter)
     { // ESP220
         Error err;
         JSONencoder encoder;
@@ -759,14 +734,13 @@ namespace WebUI
             return Error::Ok;
         }
         SD_client = (espresponse) ? espresponse->client() : CLIENT_ALL;
-        SD_auth_level = auth_level;
         // execute the first line now; Protocol.cpp handles later ones when SD_ready_next
-        report_status_message(execute_line(fileLine, SD_client, SD_auth_level), SD_client);
+        report_status_message(execute_line(fileLine, SD_client), SD_client);
         report_realtime_status(SD_client);
         return Error::Ok;
     }
 
-    static Error deleteSDObject(char *parameter, AuthenticationLevel auth_level)
+    static Error deleteSDObject(char *parameter)
     { // ESP215
         JSONencoder encoder;
         encoder.begin();
@@ -823,7 +797,7 @@ namespace WebUI
         return Error::Ok;
     }
 
-    static Error listSDFiles(char *parameter, AuthenticationLevel auth_level)
+    static Error listSDFiles(char *parameter)
     { // ESP210
         SDState state = get_sd_state(true);
         JSONencoder encoder;
@@ -913,7 +887,7 @@ namespace WebUI
         }
     }
 
-    static Error listLocalFilesJSON(char *parameter, AuthenticationLevel auth_level)
+    static Error listLocalFilesJSON(char *parameter)
     { // No ESP command
         JSONencoder j(espresponse->client() != CLIENT_WEBUI);
         j.begin();
@@ -927,7 +901,7 @@ namespace WebUI
         return Error::Ok;
     }
 
-    static Error showSDStatus(char *parameter, AuthenticationLevel auth_level)
+    static Error showSDStatus(char *parameter)
     { // ESP200
         const char *resp = "No SD card";
 #ifdef ENABLE_SD_CARD
@@ -952,7 +926,7 @@ namespace WebUI
         return Error::Ok;
     }
 
-    static Error setRadioState(char *parameter, AuthenticationLevel auth_level)
+    static Error setRadioState(char *parameter)
     { // ESP115
         JSONencoder encoder;
         encoder.begin();
@@ -1054,7 +1028,7 @@ namespace WebUI
     }
 
 #ifdef ENABLE_WIFI
-    static Error showIP(char *parameter, AuthenticationLevel auth_level)
+    static Error showIP(char *parameter)
     { // ESP111
         JSONencoder encoder;
         encoder.begin();
@@ -1063,7 +1037,7 @@ namespace WebUI
         return Error::Ok;
     }
 
-    static Error showSetStaParams(char *parameter, AuthenticationLevel auth_level)
+    static Error showSetStaParams(char *parameter)
     { // ESP103
         JSONencoder encoder;
         encoder.begin();
@@ -1100,7 +1074,7 @@ namespace WebUI
     }
 #endif
 
-    static Error showWebHelp(char *parameter, AuthenticationLevel auth_level)
+    static Error showWebHelp(char *parameter)
     { // ESP0
         JSONencoder encoder;
         encoder.begin();
@@ -1164,9 +1138,6 @@ namespace WebUI
             "TYPE=NONE|PUSHOVER|EMAIL|LINE T1=token1 T2=token2 TS=settings", WEBCMD, WA, "ESP610", "Notification/Setup", showSetNotification);
         new WebCommand("message", WEBCMD, WU, "ESP600", "Notification/Send", sendMessage);
 #endif
-#ifdef ENABLE_AUTHENTICATION
-        new WebCommand("password", WEBCMD, WA, "ESP555", "WebUI/SetUserPassword", setUserPassword);
-#endif
 #ifdef WEB_COMMON
         new WebCommand("RESTART", WEBCMD, WA, "ESP444", "System/Control", setSystemMode);
         new WebCommand(NULL, WEBCMD, WU, "ESP420", "System/Stats", showSysStats, anyState);
@@ -1221,26 +1192,6 @@ namespace WebUI
                                             NULL);
         notification_type = new EnumSetting(
             "Notification type", WEBSET, WA, NULL, "Notification/Type", DEFAULT_NOTIFICATION_TYPE, &notificationOptions, NULL);
-#endif
-#ifdef ENABLE_AUTHENTICATION
-        user_password = new StringSetting("User password",
-                                          WEBSET,
-                                          WA,
-                                          NULL,
-                                          "WebUI/UserPassword",
-                                          DEFAULT_USER_PWD,
-                                          MIN_LOCAL_PASSWORD_LENGTH,
-                                          MAX_LOCAL_PASSWORD_LENGTH,
-                                          &COMMANDS::isLocalPasswordValid);
-        admin_password = new StringSetting("Admin password",
-                                           WEBSET,
-                                           WA,
-                                           NULL,
-                                           "WebUI/AdminPassword",
-                                           DEFAULT_ADMIN_PWD,
-                                           MIN_LOCAL_PASSWORD_LENGTH,
-                                           MAX_LOCAL_PASSWORD_LENGTH,
-                                           &COMMANDS::isLocalPasswordValid);
 #endif
 #ifdef ENABLE_BLUETOOTH
         bt_name = new StringSetting("Bluetooth name",

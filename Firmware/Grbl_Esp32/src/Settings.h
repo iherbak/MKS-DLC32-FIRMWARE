@@ -88,7 +88,7 @@ public:
     // Derived classes may override it to do something.
     virtual void addWebui(WebUI::JSONencoder*) {};
 
-    virtual Error action(char* value, WebUI::AuthenticationLevel auth_level, WebUI::ESPResponseStream* out) = 0;
+    virtual Error action(char* value, WebUI::ESPResponseStream* out) = 0;
 };
 
 class Setting : public Word {
@@ -109,7 +109,7 @@ public:
 
     Error check(char* s);
 
-    static Error report_nvs_stats(const char* value, WebUI::AuthenticationLevel auth_level, WebUI::ESPResponseStream* out) {
+    static Error report_nvs_stats(const char* value, WebUI::ESPResponseStream* out) {
         nvs_stats_t stats;
         if (esp_err_t err = nvs_get_stats(NULL, &stats)) {
             return Error::NvsGetStatsFailed;
@@ -127,7 +127,7 @@ public:
         return Error::Ok;
     }
 
-    static Error eraseNVS(const char* value, WebUI::AuthenticationLevel auth_level, WebUI::ESPResponseStream* out) {
+    static Error eraseNVS(const char* value, WebUI::ESPResponseStream* out) {
         nvs_erase_all(_handle);
         return Error::Ok;
     }
@@ -453,7 +453,7 @@ extern bool notCycleOrHold();
 
 class WebCommand : public Command {
 private:
-    Error (*_action)(char*, WebUI::AuthenticationLevel);
+    Error (*_action)(char*);
     const char* password;
 
 public:
@@ -462,7 +462,7 @@ public:
                permissions_t permissions,
                const char*   grblName,
                const char*   name,
-               Error (*action)(char*, WebUI::AuthenticationLevel),
+               Error (*action)(char*),
                bool (*cmdChecker)()) :
         Command(description, type, permissions, grblName, name, cmdChecker),
         _action(action) {}
@@ -472,20 +472,20 @@ public:
                permissions_t permissions,
                const char*   grblName,
                const char*   name,
-               Error (*action)(char*, WebUI::AuthenticationLevel)) :
+               Error (*action)(char*)) :
         WebCommand(description, type, permissions, grblName, name, action, idleOrAlarm) {}
 
-    Error action(char* value, WebUI::AuthenticationLevel auth_level, WebUI::ESPResponseStream* response);
+    Error action(char* value, WebUI::ESPResponseStream* response);
 };
 
 class GrblCommand : public Command {
 private:
-    Error (*_action)(const char*, WebUI::AuthenticationLevel, WebUI::ESPResponseStream*);
+    Error (*_action)(const char*, WebUI::ESPResponseStream*);
 
 public:
     GrblCommand(const char* grblName,
                 const char* name,
-                Error (*action)(const char*, WebUI::AuthenticationLevel, WebUI::ESPResponseStream*),
+                Error (*action)(const char*, WebUI::ESPResponseStream*),
                 bool (*cmdChecker)(),
                 permissions_t auth) :
         Command(NULL, GRBLCMD, auth, grblName, name, cmdChecker),
@@ -493,10 +493,10 @@ public:
 
     GrblCommand(const char* grblName,
                 const char* name,
-                Error (*action)(const char*, WebUI::AuthenticationLevel, WebUI::ESPResponseStream*),
+                Error (*action)(const char*, WebUI::ESPResponseStream*),
                 bool (*cmdChecker)()) :
         GrblCommand(grblName, name, action, cmdChecker, WG) {}
-    Error action(char* value, WebUI::AuthenticationLevel auth_level, WebUI::ESPResponseStream* response);
+    Error action(char* value, WebUI::ESPResponseStream* response);
 };
 
 template <typename T>

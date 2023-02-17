@@ -30,8 +30,6 @@ namespace WebUI {
         static void wait(uint32_t milliseconds);
         static void handle();
         static void restart_ESP();
-        static bool isLocalPasswordValid(char* password);
-
     private:
         static bool restart_ESP_module;
     };

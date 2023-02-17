@@ -44,7 +44,6 @@
 
 // This block of #includes is necessary for Report.h
 #include "Error.h"
-#include "WebUI/Authentication.h"
 #include "WebUI/ESPResponse.h"
 #include "Probe.h"
 #include "System.h"

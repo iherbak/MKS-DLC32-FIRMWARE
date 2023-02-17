@@ -88,11 +88,7 @@ namespace WebUI
     UploadStatusType Web_Server::_upload_status = UploadStatusType::NONE;
     WebServer *Web_Server::_webserver = NULL;
     WebSocketsServer *Web_Server::_socket_server = NULL;
-#ifdef ENABLE_AUTHENTICATION
-    AuthenticationIP *Web_Server::_head = NULL;
-    uint8_t Web_Server::_nb_ip = 0;
-    const int MAX_AUTH_IP = 10;
-#endif
+
     Web_Server::Web_Server()
     {
     }
@@ -112,13 +108,6 @@ namespace WebUI
 
         // create instance
         _webserver = new WebServer(_port);
-#ifdef ENABLE_AUTHENTICATION
-        // here the list of headers to be recorded
-        const char *headerkeys[] = {"Cookie"};
-        size_t headerkeyssize = sizeof(headerkeys) / sizeof(char *);
-        // ask server to track these headers
-        _webserver->collectHeaders(headerkeys, headerkeyssize);
-#endif
         _socket_server = new WebSocketsServer(_port + 1);
         _socket_server->begin();
         _socket_server->onEvent(handle_Websocket_Event);
@@ -143,8 +132,6 @@ namespace WebUI
         // Page not found handler
         _webserver->onNotFound(handle_not_found);
 
-        // need to be there even no authentication to say to UI no authentication
-        _webserver->on("/login", HTTP_ANY, handle_login);
         // firmware info as json
         _webserver->on("/firmware", HTTP_GET, handle_fwinfo);
         _webserver->on("/grblsettings", HTTP_GET, handle_grbl_settings);
@@ -239,16 +226,6 @@ namespace WebUI
             delete _webserver;
             _webserver = NULL;
         }
-
-#ifdef ENABLE_AUTHENTICATION
-        while (_head)
-        {
-            AuthenticationIP *current = _head;
-            _head = _head->_next;
-            delete current;
-        }
-        _nb_ip = 0;
-#endif
     }
 
     // Root of Webserver/////////////////////////////////////////////////////
@@ -281,12 +258,6 @@ namespace WebUI
     // Handle not registred path on SPIFFS neither SD ///////////////////////
     void Web_Server::handle_not_found()
     {
-        if (is_authenticated() == AuthenticationLevel::LEVEL_GUEST)
-        {
-            sendStatus(301, "Page not Found");
-            return;
-        }
-
         bool page_not_found = false;
         String path = _webserver->urlDecode(_webserver->uri());
         String contentType = getContentType(path);
@@ -494,7 +465,6 @@ namespace WebUI
         //        }
         //     }
         // }
-        AuthenticationLevel auth_level = is_authenticated();
         String cmd = "";
         if (_webserver->hasArg("cmd"))
         {
@@ -514,11 +484,6 @@ namespace WebUI
         }
         else
         { // execute GCODE
-            if (auth_level == AuthenticationLevel::LEVEL_GUEST)
-            {
-                sendStatus(401, "Authantication failed");
-                return;
-            }
             // Instead of send several commands one by one by web  / send full set and split here
             String scmd;
             bool hasError = false;
@@ -557,7 +522,6 @@ namespace WebUI
 
     void Web_Server::_handle_esp_command(bool silent)
     {
-        AuthenticationLevel auth_level = is_authenticated();
         String cmd = "";
         if (_webserver->hasArg("cmd"))
         {
@@ -576,7 +540,7 @@ namespace WebUI
             char line[256];
             strncpy(line, cmd.c_str(), 255);
             ESPResponseStream *espresponse = silent ? nullptr : new ESPResponseStream(_webserver);
-            Error err = system_execute_line(line, espresponse, auth_level);
+            Error err = system_execute_line(line, espresponse);
             String answer;
             if (err == Error::Ok)
             {
@@ -609,7 +573,6 @@ namespace WebUI
 
     void Web_Server::handle_file_boundary()
     {
-        AuthenticationLevel auth_level = is_authenticated();
         if (!_webserver->hasArg("filename") || !_webserver->hasArg("path"))
         {
             sendStatus(400, "Missing filename/path query parameter");
@@ -758,11 +721,8 @@ namespace WebUI
 #endif
         encoder.member("Primary_Sd", SD_API_ENDPOINT);
         encoder.member("Secondary_Sd", "none");
-#ifdef ENABLE_AUTHENTICATION
-        encoder.member("Authentication", "yes");
-#else
         encoder.member("Authentication", "no");
-#endif
+
 #if defined(ENABLE_WIFI)
 #if defined(ENABLE_HTTP)
         encoder.begin_named_object("Webcommunication");
@@ -843,235 +803,10 @@ namespace WebUI
         _webserver->send(200, "application/json", encoder.end().c_str());
     }
 
-    // login status check
-    void Web_Server::handle_login()
-    {
-#ifdef ENABLE_AUTHENTICATION
-        String smsg;
-        String sUser, sPassword;
-        String auths;
-        int code = 200;
-        bool msg_alert_error = false;
-        // disconnect can be done anytime no need to check credential
-        if (_webserver->hasArg("DISCONNECT"))
-        {
-            String cookie = _webserver->header("Cookie");
-            int pos = cookie.indexOf("ESPSESSIONID=");
-            String sessionID;
-            if (pos != -1)
-            {
-                int pos2 = cookie.indexOf(";", pos);
-                sessionID = cookie.substring(pos + strlen("ESPSESSIONID="), pos2);
-            }
-            ClearAuthIP(_webserver->client().remoteIP(), sessionID.c_str());
-            _webserver->sendHeader("Set-Cookie", "ESPSESSIONID=0");
-            _webserver->sendHeader("Cache-Control", "no-cache");
-            String buffer2send = "{\"status\":\"Ok\",\"authentication_lvl\":\"guest\"}";
-            _webserver->send(code, "application/json", buffer2send);
-            //_webserver->client().stop();
-            return;
-        }
-
-        AuthenticationLevel auth_level = is_authenticated();
-        if (auth_level == AuthenticationLevel::LEVEL_GUEST)
-        {
-            auths = "guest";
-        }
-        else if (auth_level == AuthenticationLevel::LEVEL_USER)
-        {
-            auths = "user";
-        }
-        else if (auth_level == AuthenticationLevel::LEVEL_ADMIN)
-        {
-            auths = "admin";
-        }
-        else
-        {
-            auths = "???";
-        }
-
-        // check is it is a submission or a query
-        if (_webserver->hasArg("SUBMIT"))
-        {
-            // is there a correct list of query?
-            if (_webserver->hasArg("PASSWORD") && _webserver->hasArg("USER"))
-            {
-                // USER
-                sUser = _webserver->arg("USER");
-                if (!((sUser == DEFAULT_ADMIN_LOGIN) || (sUser == DEFAULT_USER_LOGIN)))
-                {
-                    msg_alert_error = true;
-                    smsg = "Error : Incorrect User";
-                    code = 401;
-                }
-
-                if (msg_alert_error == false)
-                {
-                    // Password
-                    sPassword = _webserver->arg("PASSWORD");
-                    String sadminPassword = admin_password->get();
-                    String suserPassword = user_password->get();
-
-                    if (!(sUser == DEFAULT_ADMIN_LOGIN && sPassword == sadminPassword) ||
-                        (sUser == DEFAULT_USER_LOGIN && sPassword == suserPassword))
-                    {
-                        msg_alert_error = true;
-                        smsg = "Error: Incorrect password";
-                        code = 401;
-                    }
-                }
-            }
-            else
-            {
-                msg_alert_error = true;
-                smsg = "Error: Missing data";
-                code = 500;
-            }
-            // change password
-            if (_webserver->hasArg("PASSWORD") && _webserver->hasArg("USER") && _webserver->hasArg("NEWPASSWORD") &&
-                (msg_alert_error == false))
-            {
-                String newpassword = _webserver->arg("NEWPASSWORD");
-
-                char pwdbuf[MAX_LOCAL_PASSWORD_LENGTH + 1];
-                newpassword.toCharArray(pwdbuf, MAX_LOCAL_PASSWORD_LENGTH + 1);
-
-                if (COMMANDS::isLocalPasswordValid(pwdbuf))
-                {
-                    Error err;
-
-                    if (sUser == DEFAULT_ADMIN_LOGIN)
-                    {
-                        err = admin_password->setStringValue(pwdbuf);
-                    }
-                    else
-                    {
-                        err = user_password->setStringValue(pwdbuf);
-                    }
-                    if (err != Error::Ok)
-                    {
-                        msg_alert_error = true;
-                        smsg = "Error: Cannot apply changes";
-                        code = 500;
-                    }
-                }
-                else
-                {
-                    msg_alert_error = true;
-                    smsg = "Error: Incorrect password";
-                    code = 500;
-                }
-            }
-            if ((code == 200) || (code == 500))
-            {
-                AuthenticationLevel current_auth_level;
-                if (sUser == DEFAULT_ADMIN_LOGIN)
-                {
-                    current_auth_level = AuthenticationLevel::LEVEL_ADMIN;
-                }
-                else if (sUser == DEFAULT_USER_LOGIN)
-                {
-                    current_auth_level = AuthenticationLevel::LEVEL_USER;
-                }
-                else
-                {
-                    current_auth_level = AuthenticationLevel::LEVEL_GUEST;
-                }
-                // create Session
-                if ((current_auth_level != auth_level) || (auth_level == AuthenticationLevel::LEVEL_GUEST))
-                {
-                    AuthenticationIP *current_auth = new AuthenticationIP;
-                    current_auth->level = current_auth_level;
-                    current_auth->ip = _webserver->client().remoteIP();
-                    strcpy(current_auth->sessionID, create_session_ID());
-                    strcpy(current_auth->userID, sUser.c_str());
-                    current_auth->last_time = millis();
-                    if (AddAuthIP(current_auth))
-                    {
-                        String tmps = "ESPSESSIONID=";
-                        tmps += current_auth->sessionID;
-                        _webserver->sendHeader("Set-Cookie", tmps);
-                        _webserver->sendHeader("Cache-Control", "no-cache");
-                        switch (current_auth->level)
-                        {
-                        case AuthenticationLevel::LEVEL_ADMIN:
-                            auths = "admin";
-                            break;
-                        case AuthenticationLevel::LEVEL_USER:
-                            auths = "user";
-                            break;
-                        default:
-                            auths = "guest";
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        delete current_auth;
-                        msg_alert_error = true;
-                        code = 500;
-                        smsg = "Error: Too many connections";
-                    }
-                }
-            }
-            if (code == 200)
-            {
-                smsg = JSONencoder::ok;
-            }
-
-            // build  JSON
-            String buffer2send = "{\"status\":\"" + smsg + "\",\"authentication_lvl\":\"";
-            buffer2send += auths;
-            buffer2send += "\"}";
-            _webserver->send(code, "application/json", buffer2send);
-        }
-        else
-        {
-            if (auth_level != AuthenticationLevel::LEVEL_GUEST)
-            {
-                String cookie = _webserver->header("Cookie");
-                int pos = cookie.indexOf("ESPSESSIONID=");
-                String sessionID;
-                if (pos != -1)
-                {
-                    int pos2 = cookie.indexOf(";", pos);
-                    sessionID = cookie.substring(pos + strlen("ESPSESSIONID="), pos2);
-                    AuthenticationIP *current_auth_info = GetAuth(_webserver->client().remoteIP(), sessionID.c_str());
-                    if (current_auth_info != NULL)
-                    {
-                        sUser = current_auth_info->userID;
-                    }
-                }
-            }
-            String buffer2send = "{\"status\":\"200\",\"authentication_lvl\":\"";
-            buffer2send += auths;
-            buffer2send += "\",\"user\":\"";
-            buffer2send += sUser;
-            buffer2send += "\"}";
-            _webserver->send(code, "application/json", buffer2send);
-        }
-#else
-        JSONencoder encoder;
-        encoder.begin();
-        encoder.member(JSONencoder::status, JSONencoder::ok);
-        encoder.member("authentication_lvl", "admin");
-        _webserver->sendHeader("Cache-Control", "no-cache");
-        _webserver->send(200, "application/json", encoder.end());
-#endif
-    }
-
     // SPIFFS
     // SPIFFS files list and file commands
     void Web_Server::handleFileList()
     {
-        AuthenticationLevel auth_level = is_authenticated();
-        if (auth_level == AuthenticationLevel::LEVEL_GUEST)
-        {
-            _upload_status = UploadStatusType::NONE;
-            sendStatus(401, "Authentication failed!");
-            return;
-        }
-
         String path;
         String status = JSONencoder::ok;
         if (_upload_status == UploadStatusType::FAILED)
@@ -1082,14 +817,7 @@ namespace WebUI
         _upload_status = UploadStatusType::NONE;
 
         // be sure root is correct according authentication
-        if (auth_level == AuthenticationLevel::LEVEL_ADMIN)
-        {
-            path = "/";
-        }
-        else
-        {
-            path = "/user";
-        }
+        path = "/";
 
         // get current path
         if (_webserver->hasArg("path"))
@@ -1333,152 +1061,133 @@ namespace WebUI
         static String filename;
         static File fsUploadFile = (File)0;
 
-        // get authentication status
-        AuthenticationLevel auth_level = is_authenticated();
-        // Guest cannot upload - only admin
-        if (auth_level == AuthenticationLevel::LEVEL_GUEST)
+        HTTPUpload &upload = _webserver->upload();
+        if ((_upload_status != UploadStatusType::FAILED) || (upload.status == UPLOAD_FILE_START))
         {
-            _upload_status = UploadStatusType::FAILED;
-            grbl_send(CLIENT_ALL, "[MSG:Upload rejected]\r\n");
-            pushError(UploadError::ESP_ERROR_AUTHENTICATION, "Upload rejected", 401);
-        }
-        else
-        {
-            HTTPUpload &upload = _webserver->upload();
-            if ((_upload_status != UploadStatusType::FAILED) || (upload.status == UPLOAD_FILE_START))
+            // Upload start
+            //**************
+            if (upload.status == UPLOAD_FILE_START)
             {
-                // Upload start
-                //**************
-                if (upload.status == UPLOAD_FILE_START)
+                _upload_status = UploadStatusType::ONGOING;
+                String upload_filename = upload.filename;
+                if (upload_filename[0] != '/')
                 {
-                    _upload_status = UploadStatusType::ONGOING;
-                    String upload_filename = upload.filename;
-                    if (upload_filename[0] != '/')
-                    {
-                        filename = "/" + upload_filename;
-                    }
-                    else
-                    {
-                        filename = upload.filename;
-                    }
+                    filename = "/" + upload_filename;
+                }
+                else
+                {
+                    filename = upload.filename;
+                }
 
-                    // according User or Admin the root is different as user is isolate to /user when admin has full access
-                    if (auth_level != AuthenticationLevel::LEVEL_ADMIN)
+                if (SPIFFS.exists(filename))
+                {
+                    SPIFFS.remove(filename);
+                }
+                if (fsUploadFile)
+                {
+                    fsUploadFile.close();
+                }
+                String sizeargname = upload.filename + "S";
+                if (_webserver->hasArg(sizeargname))
+                {
+                    uint32_t filesize = _webserver->arg(sizeargname).toInt();
+                    uint32_t freespace = SPIFFS.totalBytes() - SPIFFS.usedBytes();
+                    if (filesize > freespace)
                     {
-                        upload_filename = filename;
-                        filename = "/user" + upload_filename;
+                        _upload_status = UploadStatusType::FAILED;
+                        grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
+                        pushError(UploadError::ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space", 507);
                     }
+                }
 
-                    if (SPIFFS.exists(filename))
-                    {
-                        SPIFFS.remove(filename);
-                    }
+                if (_upload_status != UploadStatusType::FAILED)
+                {
+                    // create file
+                    fsUploadFile = SPIFFS.open(filename, FILE_WRITE);
+                    // check If creation succeed
                     if (fsUploadFile)
                     {
-                        fsUploadFile.close();
-                    }
-                    String sizeargname = upload.filename + "S";
-                    if (_webserver->hasArg(sizeargname))
-                    {
-                        uint32_t filesize = _webserver->arg(sizeargname).toInt();
-                        uint32_t freespace = SPIFFS.totalBytes() - SPIFFS.usedBytes();
-                        if (filesize > freespace)
-                        {
-                            _upload_status = UploadStatusType::FAILED;
-                            grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
-                            pushError(UploadError::ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space", 507);
-                        }
-                    }
-
-                    if (_upload_status != UploadStatusType::FAILED)
-                    {
-                        // create file
-                        fsUploadFile = SPIFFS.open(filename, FILE_WRITE);
-                        // check If creation succeed
-                        if (fsUploadFile)
-                        {
-                            // if yes upload is started
-                            _upload_status = UploadStatusType::ONGOING;
-                        }
-                        else
-                        {
-                            // if no set cancel flag
-                            _upload_status = UploadStatusType::FAILED;
-                            grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
-                            pushError(UploadError::ESP_ERROR_FILE_CREATION, "File creation failed", 500);
-                        }
-                    }
-                    // Upload write
-                    //**************
-                }
-                else if (upload.status == UPLOAD_FILE_WRITE)
-                {
-                    vTaskDelay(1 / portTICK_RATE_MS);
-                    // check if file is available and no error
-                    if (fsUploadFile && _upload_status == UploadStatusType::ONGOING)
-                    {
-                        // no error so write post date
-                        if (upload.currentSize != fsUploadFile.write(upload.buf, upload.currentSize))
-                        {
-                            _upload_status = UploadStatusType::FAILED;
-                            grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
-                            pushError(UploadError::ESP_ERROR_FILE_WRITE, "File write failed", 500);
-                        }
+                        // if yes upload is started
+                        _upload_status = UploadStatusType::ONGOING;
                     }
                     else
                     {
-                        // we have a problem set flag UploadStatusType::FAILED
+                        // if no set cancel flag
+                        _upload_status = UploadStatusType::FAILED;
+                        grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
+                        pushError(UploadError::ESP_ERROR_FILE_CREATION, "File creation failed", 500);
+                    }
+                }
+                // Upload write
+                //**************
+            }
+            else if (upload.status == UPLOAD_FILE_WRITE)
+            {
+                vTaskDelay(1 / portTICK_RATE_MS);
+                // check if file is available and no error
+                if (fsUploadFile && _upload_status == UploadStatusType::ONGOING)
+                {
+                    // no error so write post date
+                    if (upload.currentSize != fsUploadFile.write(upload.buf, upload.currentSize))
+                    {
                         _upload_status = UploadStatusType::FAILED;
                         grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
                         pushError(UploadError::ESP_ERROR_FILE_WRITE, "File write failed", 500);
                     }
-                    // Upload end
-                    //**************
-                }
-                else if (upload.status == UPLOAD_FILE_END)
-                {
-                    // check if file is still open
-                    if (fsUploadFile)
-                    {
-                        // close it
-                        fsUploadFile.close();
-                        // check size
-                        String sizeargname = upload.filename + "S";
-                        fsUploadFile = SPIFFS.open(filename, FILE_READ);
-                        uint32_t filesize = fsUploadFile.size();
-                        fsUploadFile.close();
-
-                        if (_webserver->hasArg(sizeargname) && _webserver->arg(sizeargname) != String(filesize))
-                        {
-                            _upload_status = UploadStatusType::FAILED;
-                        }
-
-                        if (_upload_status == UploadStatusType::ONGOING)
-                        {
-                            _upload_status = UploadStatusType::SUCCESSFUL;
-                        }
-                        else
-                        {
-                            grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
-                            pushError(UploadError::ESP_ERROR_UPLOAD, "File upload failed", 500);
-                        }
-                    }
-                    else
-                    {
-                        // we have a problem set flag UploadStatusType::FAILED
-                        _upload_status = UploadStatusType::FAILED;
-                        pushError(UploadError::ESP_ERROR_FILE_CLOSE, "File close failed", 500);
-                        grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
-                    }
-                    // Upload cancelled
-                    //**************
                 }
                 else
                 {
+                    // we have a problem set flag UploadStatusType::FAILED
                     _upload_status = UploadStatusType::FAILED;
-                    // pushError(ESP_ERROR_UPLOAD, "File upload failed");
-                    return;
+                    grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
+                    pushError(UploadError::ESP_ERROR_FILE_WRITE, "File write failed", 500);
                 }
+                // Upload end
+                //**************
+            }
+            else if (upload.status == UPLOAD_FILE_END)
+            {
+                // check if file is still open
+                if (fsUploadFile)
+                {
+                    // close it
+                    fsUploadFile.close();
+                    // check size
+                    String sizeargname = upload.filename + "S";
+                    fsUploadFile = SPIFFS.open(filename, FILE_READ);
+                    uint32_t filesize = fsUploadFile.size();
+                    fsUploadFile.close();
+
+                    if (_webserver->hasArg(sizeargname) && _webserver->arg(sizeargname) != String(filesize))
+                    {
+                        _upload_status = UploadStatusType::FAILED;
+                    }
+
+                    if (_upload_status == UploadStatusType::ONGOING)
+                    {
+                        _upload_status = UploadStatusType::SUCCESSFUL;
+                    }
+                    else
+                    {
+                        grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
+                        pushError(UploadError::ESP_ERROR_UPLOAD, "File upload failed", 500);
+                    }
+                }
+                else
+                {
+                    // we have a problem set flag UploadStatusType::FAILED
+                    _upload_status = UploadStatusType::FAILED;
+                    pushError(UploadError::ESP_ERROR_FILE_CLOSE, "File close failed", 500);
+                    grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
+                }
+                // Upload cancelled
+                //**************
+            }
+            else
+            {
+                _upload_status = UploadStatusType::FAILED;
+                // pushError(ESP_ERROR_UPLOAD, "File upload failed");
+                return;
             }
         }
 
@@ -1496,14 +1205,6 @@ namespace WebUI
     // Web Update handler
     void Web_Server::handleUpdate()
     {
-        AuthenticationLevel auth_level = is_authenticated();
-        if (auth_level != AuthenticationLevel::LEVEL_ADMIN)
-        {
-            _upload_status = UploadStatusType::NONE;
-            sendStatus(403, "Not allowed, log in first!");
-            return;
-        }
-
         sendStatus(200, String(uint8_t(_upload_status)));
 
         // if success restart
@@ -1524,116 +1225,106 @@ namespace WebUI
         static size_t last_upload_update;
         static uint32_t maxSketchSpace = 0;
 
-        // only admin can update FW
-        if (is_authenticated() != AuthenticationLevel::LEVEL_ADMIN)
+        // get current file ID
+        HTTPUpload &upload = _webserver->upload();
+        if ((_upload_status != UploadStatusType::FAILED) || (upload.status == UPLOAD_FILE_START))
         {
-            _upload_status = UploadStatusType::FAILED;
-            grbl_send(CLIENT_ALL, "[MSG:Upload rejected]\r\n");
-            pushError(UploadError::ESP_ERROR_AUTHENTICATION, "Upload rejected", 401);
-        }
-        else
-        {
-            // get current file ID
-            HTTPUpload &upload = _webserver->upload();
-            if ((_upload_status != UploadStatusType::FAILED) || (upload.status == UPLOAD_FILE_START))
+            // Upload start
+            //**************
+            if (upload.status == UPLOAD_FILE_START)
             {
-                // Upload start
-                //**************
-                if (upload.status == UPLOAD_FILE_START)
+                grbl_send(CLIENT_ALL, "[MSG:Update Firmware]\r\n");
+                _upload_status = UploadStatusType::ONGOING;
+                String sizeargname = upload.filename + "S";
+                if (_webserver->hasArg(sizeargname))
                 {
-                    grbl_send(CLIENT_ALL, "[MSG:Update Firmware]\r\n");
-                    _upload_status = UploadStatusType::ONGOING;
-                    String sizeargname = upload.filename + "S";
-                    if (_webserver->hasArg(sizeargname))
+                    maxSketchSpace = _webserver->arg(sizeargname).toInt();
+                }
+                // check space
+                size_t flashsize = 0;
+                if (esp_ota_get_running_partition())
+                {
+                    const esp_partition_t *partition = esp_ota_get_next_update_partition(NULL);
+                    if (partition)
                     {
-                        maxSketchSpace = _webserver->arg(sizeargname).toInt();
+                        flashsize = partition->size;
                     }
-                    // check space
-                    size_t flashsize = 0;
-                    if (esp_ota_get_running_partition())
-                    {
-                        const esp_partition_t *partition = esp_ota_get_next_update_partition(NULL);
-                        if (partition)
-                        {
-                            flashsize = partition->size;
-                        }
-                    }
-                    if (flashsize < maxSketchSpace)
-                    {
-                        pushError(UploadError::ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space", 507);
+                }
+                if (flashsize < maxSketchSpace)
+                {
+                    pushError(UploadError::ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space", 507);
+                    _upload_status = UploadStatusType::FAILED;
+                    grbl_send(CLIENT_ALL, "[MSG:Update cancelled]\r\n");
+                }
+                if (_upload_status != UploadStatusType::FAILED)
+                {
+                    last_upload_update = 0;
+                    if (!Update.begin())
+                    { // start with max available size
                         _upload_status = UploadStatusType::FAILED;
                         grbl_send(CLIENT_ALL, "[MSG:Update cancelled]\r\n");
-                    }
-                    if (_upload_status != UploadStatusType::FAILED)
-                    {
-                        last_upload_update = 0;
-                        if (!Update.begin())
-                        { // start with max available size
-                            _upload_status = UploadStatusType::FAILED;
-                            grbl_send(CLIENT_ALL, "[MSG:Update cancelled]\r\n");
-                            pushError(UploadError::ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space", 507);
-                        }
-                        else
-                        {
-                            grbl_send(CLIENT_ALL, "\n[MSG:Update 0%]\r\n");
-                        }
-                    }
-                    // Upload write
-                    //**************
-                }
-                else if (upload.status == UPLOAD_FILE_WRITE)
-                {
-                    vTaskDelay(1 / portTICK_RATE_MS);
-                    // check if no error
-                    if (_upload_status == UploadStatusType::ONGOING)
-                    {
-                        if (((100 * upload.totalSize) / maxSketchSpace) != last_upload_update)
-                        {
-                            if (maxSketchSpace > 0)
-                            {
-                                last_upload_update = (100 * upload.totalSize) / maxSketchSpace;
-                            }
-                            else
-                            {
-                                last_upload_update = upload.totalSize;
-                            }
-
-                            String s = "Update ";
-                            s += String(last_upload_update);
-                            s += "%";
-                            grbl_sendf(CLIENT_ALL, "[MSG:%s]\r\n", s.c_str());
-                        }
-                        if (Update.write(upload.buf, upload.currentSize) != upload.currentSize)
-                        {
-                            _upload_status = UploadStatusType::FAILED;
-                            grbl_send(CLIENT_ALL, "[MSG:Update write failed]\r\n");
-                            pushError(UploadError::ESP_ERROR_FILE_WRITE, "File write failed", 500);
-                        }
-                    }
-                    // Upload end
-                    //**************
-                }
-                else if (upload.status == UPLOAD_FILE_END)
-                {
-                    if (Update.end(true))
-                    { // true to set the size to the current progress
-                        // Now Reboot
-                        grbl_send(CLIENT_ALL, "[MSG:Update 100%]\r\n");
-                        _upload_status = UploadStatusType::SUCCESSFUL;
+                        pushError(UploadError::ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space", 507);
                     }
                     else
                     {
-                        _upload_status = UploadStatusType::FAILED;
-                        grbl_send(CLIENT_ALL, "[MSG:Update failed]\r\n");
-                        pushError(UploadError::ESP_ERROR_UPLOAD, "Update upload failed", 500);
+                        grbl_send(CLIENT_ALL, "\n[MSG:Update 0%]\r\n");
                     }
                 }
-                else if (upload.status == UPLOAD_FILE_ABORTED)
+                // Upload write
+                //**************
+            }
+            else if (upload.status == UPLOAD_FILE_WRITE)
+            {
+                vTaskDelay(1 / portTICK_RATE_MS);
+                // check if no error
+                if (_upload_status == UploadStatusType::ONGOING)
                 {
-                    grbl_send(CLIENT_ALL, "[MSG:Update failed]\r\n");
-                    _upload_status = UploadStatusType::FAILED;
-                    return;
+                    if (((100 * upload.totalSize) / maxSketchSpace) != last_upload_update)
+                    {
+                        if (maxSketchSpace > 0)
+                        {
+                            last_upload_update = (100 * upload.totalSize) / maxSketchSpace;
+                        }
+                        else
+                        {
+                            last_upload_update = upload.totalSize;
+                        }
+
+                        String s = "Update ";
+                        s += String(last_upload_update);
+                        s += "%";
+                        grbl_sendf(CLIENT_ALL, "[MSG:%s]\r\n", s.c_str());
+                    }
+                    if (Update.write(upload.buf, upload.currentSize) != upload.currentSize)
+                    {
+                        _upload_status = UploadStatusType::FAILED;
+                        grbl_send(CLIENT_ALL, "[MSG:Update write failed]\r\n");
+                        pushError(UploadError::ESP_ERROR_FILE_WRITE, "File write failed", 500);
+                    }
                 }
+                // Upload end
+                //**************
+            }
+            else if (upload.status == UPLOAD_FILE_END)
+            {
+                if (Update.end(true))
+                { // true to set the size to the current progress
+                    // Now Reboot
+                    grbl_send(CLIENT_ALL, "[MSG:Update 100%]\r\n");
+                    _upload_status = UploadStatusType::SUCCESSFUL;
+                }
+                else
+                {
+                    _upload_status = UploadStatusType::FAILED;
+                    grbl_send(CLIENT_ALL, "[MSG:Update failed]\r\n");
+                    pushError(UploadError::ESP_ERROR_UPLOAD, "Update upload failed", 500);
+                }
+            }
+            else if (upload.status == UPLOAD_FILE_ABORTED)
+            {
+                grbl_send(CLIENT_ALL, "[MSG:Update failed]\r\n");
+                _upload_status = UploadStatusType::FAILED;
+                return;
             }
         }
 
@@ -1699,14 +1390,6 @@ namespace WebUI
     // direct SD files list//////////////////////////////////////////////////
     void Web_Server::handle_direct_SDFileList()
     {
-        // this is only for admin and user
-        if (is_authenticated() == AuthenticationLevel::LEVEL_GUEST)
-        {
-            _upload_status = UploadStatusType::NONE;
-            sendStatus(401, "Authentication failed!");
-            return;
-        }
-
         String path = "/";
         String sstatus = JSONencoder::ok;
         if ((_upload_status == UploadStatusType::FAILED) || (_upload_status == UploadStatusType::FAILED))
@@ -1929,154 +1612,145 @@ namespace WebUI
     {
         static String filename;
         static File sdUploadFile;
-        // this is only for admin and user
-        if (is_authenticated() == AuthenticationLevel::LEVEL_GUEST)
+        // retrieve current file id
+        HTTPUpload &upload = _webserver->upload();
+        if ((_upload_status != UploadStatusType::FAILED) || (upload.status == UPLOAD_FILE_START))
         {
-            _upload_status = UploadStatusType::FAILED;
-            sendStatus(401, "Authentication failed");
-            pushError(UploadError::ESP_ERROR_AUTHENTICATION, "Upload rejected", 401);
-        }
-        else
-        {
-            // retrieve current file id
-            HTTPUpload &upload = _webserver->upload();
-            if ((_upload_status != UploadStatusType::FAILED) || (upload.status == UPLOAD_FILE_START))
+            // Upload start
+            //**************
+            if (upload.status == UPLOAD_FILE_START)
             {
-                // Upload start
-                //**************
-                if (upload.status == UPLOAD_FILE_START)
+                _upload_status = UploadStatusType::ONGOING;
+                filename = upload.filename;
+                // on SD need to add / if not present
+                if (filename[0] != '/')
                 {
-                    _upload_status = UploadStatusType::ONGOING;
-                    filename = upload.filename;
-                    // on SD need to add / if not present
-                    if (filename[0] != '/')
-                    {
-                        filename = "/" + upload.filename;
-                    }
-                    // check if SD Card is available
-                    if (get_sd_state(true) != SDState::Idle)
-                    {
-                        _upload_status = UploadStatusType::FAILED;
-                        grbl_send(CLIENT_ALL, "[MSG:Upload cancelled]\r\n");
-                        pushError(UploadError::ESP_ERROR_UPLOAD_CANCELLED, "Upload cancelled", 500);
-                    }
-                    else
-                    {
-                        set_sd_state(SDState::BusyUploading);
-                        // delete file on SD Card if already present
-                        if (SD.exists(filename))
-                        {
-                            SD.remove(filename);
-                        }
-                        String sizeargname = upload.filename + "S";
-                        if (_webserver->hasArg(sizeargname))
-                        {
-                            uint32_t filesize = _webserver->arg(sizeargname).toInt();
-                            uint64_t freespace = SD.totalBytes() - SD.usedBytes();
-                            if (filesize > freespace)
-                            {
-                                _upload_status = UploadStatusType::FAILED;
-                                grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
-                                pushError(UploadError::ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space", 507);
-                            }
-                        }
-                        if (_upload_status != UploadStatusType::FAILED)
-                        {
-                            // Create file for writing
-                            sdUploadFile = SD.open(filename, FILE_WRITE);
-                            // check if creation succeed
-                            if (!sdUploadFile)
-                            {
-                                // if creation failed
-                                _upload_status = UploadStatusType::FAILED;
-                                grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
-                                pushError(UploadError::ESP_ERROR_FILE_CREATION, "File creation failed", 500);
-                            }
-                            // if creation succeed set flag UploadStatusType::ONGOING
-                            else
-                            {
-                                _upload_status = UploadStatusType::ONGOING;
-                            }
-                        }
-                    }
-                    // Upload write
-                    //**************
+                    filename = "/" + upload.filename;
                 }
-                else if (upload.status == UPLOAD_FILE_WRITE)
+                // check if SD Card is available
+                if (get_sd_state(true) != SDState::Idle)
                 {
-                    vTaskDelay(1 / portTICK_RATE_MS);
-                    if (sdUploadFile && (_upload_status == UploadStatusType::ONGOING) && (get_sd_state(false) == SDState::BusyUploading))
+                    _upload_status = UploadStatusType::FAILED;
+                    grbl_send(CLIENT_ALL, "[MSG:Upload cancelled]\r\n");
+                    pushError(UploadError::ESP_ERROR_UPLOAD_CANCELLED, "Upload cancelled", 500);
+                }
+                else
+                {
+                    set_sd_state(SDState::BusyUploading);
+                    // delete file on SD Card if already present
+                    if (SD.exists(filename))
                     {
-                        // no error write post data
-                        if (upload.currentSize != sdUploadFile.write(upload.buf, upload.currentSize))
+                        SD.remove(filename);
+                    }
+                    String sizeargname = upload.filename + "S";
+                    if (_webserver->hasArg(sizeargname))
+                    {
+                        uint32_t filesize = _webserver->arg(sizeargname).toInt();
+                        uint64_t freespace = SD.totalBytes() - SD.usedBytes();
+                        if (filesize > freespace)
                         {
                             _upload_status = UploadStatusType::FAILED;
-                            grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
-                            pushError(UploadError::ESP_ERROR_FILE_WRITE, "File write failed", 500);
+                            grbl_send(CLIENT_ALL, "[MSG:Upload error]\r\n");
+                            pushError(UploadError::ESP_ERROR_NOT_ENOUGH_SPACE, "Upload rejected, not enough space", 507);
                         }
                     }
-                    else
-                    { // if error set flag UploadStatusType::FAILED
+                    if (_upload_status != UploadStatusType::FAILED)
+                    {
+                        // Create file for writing
+                        sdUploadFile = SD.open(filename, FILE_WRITE);
+                        // check if creation succeed
+                        if (!sdUploadFile)
+                        {
+                            // if creation failed
+                            _upload_status = UploadStatusType::FAILED;
+                            grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
+                            pushError(UploadError::ESP_ERROR_FILE_CREATION, "File creation failed", 500);
+                        }
+                        // if creation succeed set flag UploadStatusType::ONGOING
+                        else
+                        {
+                            _upload_status = UploadStatusType::ONGOING;
+                        }
+                    }
+                }
+                // Upload write
+                //**************
+            }
+            else if (upload.status == UPLOAD_FILE_WRITE)
+            {
+                vTaskDelay(1 / portTICK_RATE_MS);
+                if (sdUploadFile && (_upload_status == UploadStatusType::ONGOING) && (get_sd_state(false) == SDState::BusyUploading))
+                {
+                    // no error write post data
+                    if (upload.currentSize != sdUploadFile.write(upload.buf, upload.currentSize))
+                    {
                         _upload_status = UploadStatusType::FAILED;
                         grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
                         pushError(UploadError::ESP_ERROR_FILE_WRITE, "File write failed", 500);
                     }
-                    // Upload end
-                    //**************
                 }
-                else if (upload.status == UPLOAD_FILE_END)
+                else
+                { // if error set flag UploadStatusType::FAILED
+                    _upload_status = UploadStatusType::FAILED;
+                    grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
+                    pushError(UploadError::ESP_ERROR_FILE_WRITE, "File write failed", 500);
+                }
+                // Upload end
+                //**************
+            }
+            else if (upload.status == UPLOAD_FILE_END)
+            {
+                // if file is open close it
+                if (sdUploadFile)
                 {
-                    // if file is open close it
-                    if (sdUploadFile)
+                    sdUploadFile.close();
+                    // TODO Check size
+                    String sizeargname = upload.filename + "S";
+                    if (_webserver->hasArg(sizeargname))
                     {
+                        uint32_t filesize = 0;
+                        sdUploadFile = SD.open(filename, FILE_READ);
+                        filesize = sdUploadFile.size();
                         sdUploadFile.close();
-                        // TODO Check size
-                        String sizeargname = upload.filename + "S";
-                        if (_webserver->hasArg(sizeargname))
+                        if (_webserver->arg(sizeargname) != String(filesize))
                         {
-                            uint32_t filesize = 0;
-                            sdUploadFile = SD.open(filename, FILE_READ);
-                            filesize = sdUploadFile.size();
-                            sdUploadFile.close();
-                            if (_webserver->arg(sizeargname) != String(filesize))
-                            {
-                                _upload_status = UploadStatusType::FAILED;
-                                pushError(UploadError::ESP_ERROR_UPLOAD, "File upload mismatch", 500);
-                                grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
-                            }
+                            _upload_status = UploadStatusType::FAILED;
+                            pushError(UploadError::ESP_ERROR_UPLOAD, "File upload mismatch", 500);
+                            grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
                         }
-                    }
-                    else
-                    {
-                        _upload_status = UploadStatusType::FAILED;
-                        grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
-                        pushError(UploadError::ESP_ERROR_FILE_CLOSE, "File close failed", 500);
-                    }
-                    if (_upload_status == UploadStatusType::ONGOING)
-                    {
-                        _upload_status = UploadStatusType::SUCCESSFUL;
-                        set_sd_state(SDState::Idle);
-                    }
-                    else
-                    {
-                        _upload_status = UploadStatusType::FAILED;
-                        pushError(UploadError::ESP_ERROR_UPLOAD, "Upload error", 500);
                     }
                 }
                 else
-                { // Upload cancelled
+                {
                     _upload_status = UploadStatusType::FAILED;
-                    set_sd_state(SDState::Idle);
                     grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
-                    if (sdUploadFile)
-                    {
-                        sdUploadFile.close();
-                    }
-                    SD.end();
-                    return;
+                    pushError(UploadError::ESP_ERROR_FILE_CLOSE, "File close failed", 500);
+                }
+                if (_upload_status == UploadStatusType::ONGOING)
+                {
+                    _upload_status = UploadStatusType::SUCCESSFUL;
+                    set_sd_state(SDState::Idle);
+                }
+                else
+                {
+                    _upload_status = UploadStatusType::FAILED;
+                    pushError(UploadError::ESP_ERROR_UPLOAD, "Upload error", 500);
                 }
             }
+            else
+            { // Upload cancelled
+                _upload_status = UploadStatusType::FAILED;
+                set_sd_state(SDState::Idle);
+                grbl_send(CLIENT_ALL, "[MSG:Upload failed]\r\n");
+                if (sdUploadFile)
+                {
+                    sdUploadFile.close();
+                }
+                SD.end();
+                return;
+            }
         }
+
         if (_upload_status == UploadStatusType::FAILED)
         {
             cancelUpload();
@@ -2252,174 +1926,6 @@ namespace WebUI
         return "application/octet-stream";
     }
 
-    // check authentification
-    AuthenticationLevel Web_Server::is_authenticated()
-    {
-#ifdef ENABLE_AUTHENTICATION
-        if (_webserver->hasHeader("Cookie"))
-        {
-            String cookie = _webserver->header("Cookie");
-            int pos = cookie.indexOf("ESPSESSIONID=");
-            if (pos != -1)
-            {
-                int pos2 = cookie.indexOf(";", pos);
-                String sessionID = cookie.substring(pos + strlen("ESPSESSIONID="), pos2);
-                IPAddress ip = _webserver->client().remoteIP();
-                // check if cookie can be reset and clean table in same time
-                return ResetAuthIP(ip, sessionID.c_str());
-            }
-        }
-        return AuthenticationLevel::LEVEL_GUEST;
-#else
-        return AuthenticationLevel::LEVEL_ADMIN;
-#endif
-    }
-
-#ifdef ENABLE_AUTHENTICATION
-
-    // add the information in the linked list if possible
-    bool Web_Server::AddAuthIP(AuthenticationIP *item)
-    {
-        if (_nb_ip > MAX_AUTH_IP)
-        {
-            return false;
-        }
-        item->_next = _head;
-        _head = item;
-        _nb_ip++;
-        return true;
-    }
-
-    // Session ID based on IP and time using 16 char
-    char *Web_Server::create_session_ID()
-    {
-        static char sessionID[17];
-        // reset SESSIONID
-        for (int i = 0; i < 17; i++)
-        {
-            sessionID[i] = '\0';
-        }
-        // get time
-        uint32_t now = millis();
-        // get remote IP
-        IPAddress remoteIP = _webserver->client().remoteIP();
-        // generate SESSIONID
-        if (0 > sprintf(sessionID,
-                        "%02X%02X%02X%02X%02X%02X%02X%02X",
-                        remoteIP[0],
-                        remoteIP[1],
-                        remoteIP[2],
-                        remoteIP[3],
-                        (uint8_t)((now >> 0) & 0xff),
-                        (uint8_t)((now >> 8) & 0xff),
-                        (uint8_t)((now >> 16) & 0xff),
-                        (uint8_t)((now >> 24) & 0xff)))
-        {
-            strcpy(sessionID, "NONE");
-        }
-        return sessionID;
-    }
-
-    bool Web_Server::ClearAuthIP(IPAddress ip, const char *sessionID)
-    {
-        AuthenticationIP *current = _head;
-        AuthenticationIP *previous = NULL;
-        bool done = false;
-        while (current)
-        {
-            if ((ip == current->ip) && (strcmp(sessionID, current->sessionID) == 0))
-            {
-                // remove
-                done = true;
-                if (current == _head)
-                {
-                    _head = current->_next;
-                    _nb_ip--;
-                    delete current;
-                    current = _head;
-                }
-                else
-                {
-                    previous->_next = current->_next;
-                    _nb_ip--;
-                    delete current;
-                    current = previous->_next;
-                }
-            }
-            else
-            {
-                previous = current;
-                current = current->_next;
-            }
-        }
-        return done;
-    }
-
-    // Get info
-    AuthenticationIP *Web_Server::GetAuth(IPAddress ip, const char *sessionID)
-    {
-        AuthenticationIP *current = _head;
-        // AuthenticationIP * previous = NULL;
-        // get time
-        // uint32_t now = millis();
-        while (current)
-        {
-            if (ip == current->ip)
-            {
-                if (strcmp(sessionID, current->sessionID) == 0)
-                {
-                    // found
-                    return current;
-                }
-            }
-            // previous = current;
-            current = current->_next;
-        }
-        return NULL;
-    }
-
-    // Review all IP to reset timers
-    AuthenticationLevel Web_Server::ResetAuthIP(IPAddress ip, const char *sessionID)
-    {
-        AuthenticationIP *current = _head;
-        AuthenticationIP *previous = NULL;
-        // get time
-        // uint32_t now = millis();
-        while (current)
-        {
-            if ((millis() - current->last_time) > 360000)
-            {
-                // remove
-                if (current == _head)
-                {
-                    _head = current->_next;
-                    _nb_ip--;
-                    delete current;
-                    current = _head;
-                }
-                else
-                {
-                    previous->_next = current->_next;
-                    _nb_ip--;
-                    delete current;
-                    current = previous->_next;
-                }
-            }
-            else
-            {
-                if (ip == current->ip && strcmp(sessionID, current->sessionID) == 0)
-                {
-                    // reset time
-                    current->last_time = millis();
-                    return (AuthenticationLevel)current->level;
-                }
-                previous = current;
-                current = current->_next;
-            }
-        }
-        return AuthenticationLevel::LEVEL_GUEST;
-    }
-#endif
     // push error code and message to websocket
     void Web_Server::sendStatus(int httpCode, String status)
     {

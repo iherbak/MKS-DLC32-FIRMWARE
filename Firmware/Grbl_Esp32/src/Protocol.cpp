@@ -78,7 +78,7 @@ Error add_char_to_line(char c, uint8_t client) {
     return Error::Ok;
 }
 
-Error execute_line(char* line, uint8_t client, WebUI::AuthenticationLevel auth_level) {
+Error execute_line(char* line, uint8_t client) {
     Error result = Error::Ok;
     // Empty or comment line. For syncing purposes.
     if (line[0] == 0) {
@@ -86,7 +86,7 @@ Error execute_line(char* line, uint8_t client, WebUI::AuthenticationLevel auth_l
     }
     // Grbl '$' or WebUI '[ESPxxx]' system command
     if (line[0] == '$' || line[0] == '[') {
-        return system_execute_line(line, client, auth_level);
+        return system_execute_line(line, client);
     }
     // Everything else is gcode. Block if in alarm or jog mode.
     if (sys.state == State::Alarm || sys.state == State::Jog) {
@@ -159,7 +159,7 @@ void protocol_main_loop() {
             char fileLine[255];
                 if (readFileLine(fileLine, 255)) {
                     SD_ready_next = false;
-                    report_status_message(execute_line(fileLine, SD_client, SD_auth_level), SD_client);
+                    report_status_message(execute_line(fileLine, SD_client), SD_client);
                 } 
                 else {
                     if(mks_grbl.carve_times != 0) mks_grbl.carve_times--;
@@ -198,7 +198,7 @@ void protocol_main_loop() {
                 }
                 SD_ready_next = false;
                 rb_read(&rb_sd, fileLine);
-                report_status_message(execute_line(fileLine, SD_client, SD_auth_level), SD_client);
+                report_status_message(execute_line(fileLine, SD_client), SD_client);
             } 
             else {
                 char temp[50];
@@ -244,8 +244,7 @@ void protocol_main_loop() {
 #ifdef REPORT_ECHO_RAW_LINE_RECEIVED
                         report_echo_line_received(line, client);
 #endif
-                        // auth_level can be upgraded by supplying a password on the command line
-                        report_status_message(execute_line(line, client, WebUI::AuthenticationLevel::LEVEL_GUEST), client);
+                        report_status_message(execute_line(line, client), client);
                         empty_line(client);
                         break;
                     case Error::Overflow:

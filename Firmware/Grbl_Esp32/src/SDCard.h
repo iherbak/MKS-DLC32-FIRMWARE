@@ -34,7 +34,6 @@ enum class SDState : uint8_t {
 
 extern bool                       SD_ready_next;  // Grbl has processed a line and is waiting for another
 extern uint8_t                    SD_client;
-extern WebUI::AuthenticationLevel SD_auth_level;
 
 // mks fix
 extern uint32_t                   sd_current_line_number;

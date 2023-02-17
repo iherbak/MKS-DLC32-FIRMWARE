@@ -459,12 +459,9 @@ Error StringSetting::mks_setStringValue(char* s) {
 }
 
 static bool isPassword(bool (*_checker)(char*)) {
-#ifdef ENABLE_WIFI
     if (_checker == (bool (*)(char*))WebUI::WiFiConfig::isPasswordValid) {
         return true;
     }
-#endif
-    return _checker == (bool (*)(char*))WebUI::COMMANDS::isLocalPasswordValid;
 }
 
 const char* StringSetting::getDefaultString() {
@@ -742,11 +739,11 @@ void IPaddrSetting::addWebui(WebUI::JSONencoder* j) {
 
 AxisSettings::AxisSettings(const char* axisName) : name(axisName) {}
 
-Error GrblCommand::action(char* value, WebUI::AuthenticationLevel auth_level, WebUI::ESPResponseStream* out) {
+Error GrblCommand::action(char* value, WebUI::ESPResponseStream* out) {
     if (_cmdChecker && _cmdChecker()) {
         return Error::IdleError;
     }
-    return _action((const char*)value, auth_level, out);
+    return _action((const char*)value, out);
 };
 Coordinates* coords[CoordIndex::End];
 

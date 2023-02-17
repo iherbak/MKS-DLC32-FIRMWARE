@@ -42,26 +42,6 @@ namespace WebUI {
         }
     }
 
-    bool COMMANDS::isLocalPasswordValid(char* password) {
-        if (!password) {
-            return true;
-        }
-        char c;
-        //limited size
-        if ((strlen(password) > MAX_LOCAL_PASSWORD_LENGTH) || (strlen(password) < MIN_LOCAL_PASSWORD_LENGTH)) {
-            return false;
-        }
-
-        //no space allowed
-        for (int i = 0; i < strlen(password); i++) {
-            c = password[i];
-            if (c == ' ') {
-                return false;
-            }
-        }
-        return true;
-    }
-
     /**
      * Restart ESP
      */

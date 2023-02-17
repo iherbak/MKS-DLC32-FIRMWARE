@@ -1,10 +1,6 @@
 This file defines the [ESP...] style commands. They can be used via serial, Bluetooth or Wifi
 These are used for basic wireless settings as well as SD card commands
 
-Some commands need to be authenticated with a password. Authentication
-is optional via #define ENABLE_AUTHENTICATION in the config.h file.
-The default password is "admin"
-
 ============== Examples (assumes "admin" password): ===============
 
 Command: [ESP800]pwd=admin
