@@ -275,6 +275,7 @@ static int IRAM_ATTR i2s_out_stop() {
     // Transmit recovery data to 74HC595
     uint32_t port_data = atomic_load(&i2s_out_port_data);  // current expanded port value
     i2s_out_gpio_shiftout(port_data);
+    gpio_uninstall_isr_service();
 
 #ifdef USE_I2S_OUT_STREAM_IMPL
     //clear pending interrupt
@@ -710,6 +711,7 @@ int IRAM_ATTR i2s_out_init(i2s_out_init_t& init_param) {
         // already initialized
         return -1;
     }
+    gpio_install_isr_service(0);
 
     atomic_store(&i2s_out_port_data, init_param.init_val);
 

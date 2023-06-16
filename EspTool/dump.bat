@@ -1,1 +1,1 @@
-esptool --port COM3 --baud 115200 read_flash 0x000000 0x800000 firmware.bin
+esptool --port COM4 --baud 115200 read_flash 0x000000 0x800000 firmware.bin

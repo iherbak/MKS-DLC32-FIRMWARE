@@ -186,7 +186,7 @@ void clientCheckTask(void* pvParameters) {
 #endif  //ENABLE_SD_CARD
                     taskENTER_CRITICAL(&myMutex);
                     client_buffer[client].write(data);
-                    taskENTER_CRITICAL(&myMutex);
+                    taskEXIT_CRITICAL(&myMutex);
 #if defined(ENABLE_SD_CARD)
                 } else {
                     if (data == '\r' || data == '\n') {
@@ -231,7 +231,7 @@ void client_reset_read_buffer(uint8_t client) {
 int client_read(uint8_t client) {
     taskENTER_CRITICAL(&myMutex);
     int data = client_buffer[client].read();
-    taskENTER_CRITICAL(&myMutex);
+    taskEXIT_CRITICAL(&myMutex);
     return data;
 }
 
