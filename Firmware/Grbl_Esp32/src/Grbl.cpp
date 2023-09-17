@@ -26,6 +26,7 @@
 #include "mks/MKS_draw_ready.h"
 #include "mks/MKS_ctrl.h"
 #include "mks/MKS_SDCard.h"
+#include "mks/MKS_draw_language.h"
 
 void grbl_init() {
 
@@ -123,6 +124,8 @@ void _mc_task_init(void) {
     tft_TS35_init();
     test_cfg_find_init();
     disp_task_init();
+    set_language(1);
+    set_language_btn_style(1);
 }
 
 
